@@ -25,7 +25,7 @@ void app_main(void)
        Technical Reference for a list of pads and their default
        functions.)
     */
-    gpio_reset_pin(BLINK_GPIO);
+    gpio_reset_pin(CONFIG_BLINK_GPIO);
     /* Set the GPIO as a push/pull output */
     gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
     while(1) {
@@ -37,5 +37,8 @@ void app_main(void)
         printf("Turning on the LED\n");
         gpio_set_level(BLINK_GPIO, 1);
         vTaskDelay(2000 / portTICK_PERIOD_MS);
+
+        int i = 1;
+        printf("i = %i\n", i);  
     }
 }
