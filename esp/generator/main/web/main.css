@@ -1,0 +1,53 @@
+body {
+    margin:0;
+}
+
+.state {
+    padding: .4em;
+    text-align: center;
+    font-size: 150%;
+    font-family: sans-serif;
+}
+
+.button {
+    padding: .4em;
+    text-align: center;
+    font-size: 150%;
+    font-family: sans-serif;
+    background: yellow;
+    margin: .5em;
+    border-radius: 1em;
+    border: .1em solid;
+}
+
+.buttonInactive {
+    border-color: white;
+    pointer-events: none;
+}
+
+.voltageOuter {
+    width:90%;
+    margin-left:5%;
+}
+.voltage {
+    margin: 1.5em;
+    background:pink;
+    position:relative;
+    height:1em;
+    padding:.5em
+}
+
+.voltageMinMax {
+    background:blue;
+    height: 1em;
+    position: absolute;
+}
+
+.voltageCenter {
+    background:white;
+    width: .5%;
+    height:1em;
+    position: absolute;
+    transition: all 0.2s ease 0s;
+
+}
