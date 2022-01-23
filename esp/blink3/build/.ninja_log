@@ -979,3 +979,13 @@
 1370	2013	1642907499678788938	blink.elf	5abd1ceca94b3c9
 2013	2151	1642907499822720076	.bin_timestamp	c19dbb0b7b79dc97
 2151	5804	0	esp-idf/esptool_py/CMakeFiles/app-flash	1bbf4b077bea8c74
+1	3531	1642907814994288165	build.ninja	27f39715ddfa9e42
+24	40	1642907353261169085	bootloader-prefix/src/bootloader-stamp/bootloader-build	29efa3ac70f3a45
+24	40	1642907353261169085	bootloader/bootloader.elf	29efa3ac70f3a45
+24	40	1642907353261169085	bootloader/bootloader.bin	29efa3ac70f3a45
+24	40	1642907353261169085	bootloader/bootloader.map	29efa3ac70f3a45
+24	78	1642907815154279895	esp-idf/app_update/CMakeFiles/__idf_app_update.dir/esp_app_desc.c.obj	7f5168f925cbbbc0
+78	88	1642907815162279482	esp-idf/app_update/libapp_update.a	c66a7b8b68295042
+88	1550	1642907816590206139	esp-idf/esp32/ld/esp32.project.ld	2f38398e79d35bf6
+1550	2188	1642907817258172272	blink.elf	5abd1ceca94b3c9
+2188	2335	1642907817410164629	.bin_timestamp	c19dbb0b7b79dc97
