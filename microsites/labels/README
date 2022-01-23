@@ -1,0 +1,14 @@
+
+Need key for spreadsheets
+
+https://console.developers.google.com/apis/credentials/key/3f0f3572-7cca-4151-858e-73f1189bd3d4?project=zuboludesigns-hrd&folder&organizationId
+
+Reference for API from google
+
+https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get?apix_params=%7B%22spreadsheetId%22%3A%221lmRuymbvNzDDriscUc7_vmWPOnGBiv5taO1_hGw-sP8%22%2C%22range%22%3A%22Sheet1%22%7D
+
+This downloads a spreadsheet
+
+curl https://sheets.googleapis.com/v4/spreadsheets/1lmRuymbvNzDDriscUc7_vmWPOnGBiv5taO1_hGw-sP8/values/Sheet1?key=AIzaSyCcxs61NVz6a21Q-v3bDC1nHF3Ctt3aBP4
+
+

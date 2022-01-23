@@ -1,0 +1,91 @@
+html {
+    margin:0;
+    width:8.0in;
+    background:green;
+}
+
+
+body {
+    padding-top:0in;
+    padding-left:0in;
+    background:pink;
+    margin:0;
+    font-size:0px;
+    width:8.0in;
+    display: block;
+}
+
+
+.holder {
+    font-size:12px;
+    margin:0;
+    height:1in;
+    height:1.11111111111in;
+    display:inline-block;
+    display:inline-flex;
+    width:3.40625in;
+    
+    overflow: hidden;
+
+    align-items: center;
+    justify-content: center;
+}
+
+.holderLeft {
+    margin-left:.5in;
+}
+.holderRight {
+    margin-left:0.685in;
+}
+
+.holderBackground0 {
+    background:grey;
+}
+
+
+.holderBackground1 {
+    background:lightgray;
+}
+
+.holderBackground2 {
+    background:rgb(185, 118, 118);
+}
+
+.holderBackground3 {
+    background:rgb(126, 177, 201);
+}
+
+.innerHolder{
+    background: white;
+    text-align: center;
+    max-height: 23mm;
+    overflow: hidden;
+}
+.line1, .line2, .line3 {
+    display: block;
+    font-size: 14pt;
+    max-width: 87mm;
+    overflow: hidden;
+    max-height: 1.2em;
+}
+
+.line1 {
+    font-size:22pt;
+}
+
+.line2 {
+    font-style: italic;
+    font-size:13pt;
+}
+
+
+
+@page {
+    margin: 0.0in;
+    margin:0.5in 0in 0cm 0cm;
+    margin-left:0.0in;
+  
+    size: 8.5in  11in; 
+  }
+  
+
