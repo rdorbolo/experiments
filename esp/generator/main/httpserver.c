@@ -148,7 +148,8 @@ void startHttpServer()
         char messageBody[400];
         bool keepAlive = false;
         struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
-        uint addr_len = sizeof(source_addr);
+        
+        uint32_t addr_len = sizeof(source_addr);
         int sock;
         struct timeval to;
         u16_t port;
@@ -196,7 +197,7 @@ void startHttpServer()
             bool contentLengthLine = false;
             int contentLength = -1;
             bool httpHeader = true;
-            uint bodyLen = 0;
+            int bodyLen = 0;
 #define MAXURL 100
             char url[MAXURL];
             char filename[MAXURL + 10];
