@@ -38,6 +38,11 @@ void app_main(void)
         gpio_set_level(BLINK_GPIO, 1);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-        printf("hi rick\n");
+        int x;
+        x = 1; 
+
+        printf("hi rick %i\n", cat3dd);
+
+
     }
 }
