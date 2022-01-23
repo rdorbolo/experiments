@@ -1001,3 +1001,15 @@
 17	27	1642907353261169085	bootloader/bootloader.elf	29efa3ac70f3a45
 17	27	1642907353261169085	bootloader/bootloader.bin	29efa3ac70f3a45
 17	27	1642907353261169085	bootloader/bootloader.map	29efa3ac70f3a45
+0	3472	1642909300580957556	build.ninja	27f39715ddfa9e42
+16	32	1642907353261169085	bootloader-prefix/src/bootloader-stamp/bootloader-build	29efa3ac70f3a45
+16	32	1642907353261169085	bootloader/bootloader.elf	29efa3ac70f3a45
+16	32	1642907353261169085	bootloader/bootloader.bin	29efa3ac70f3a45
+16	32	1642907353261169085	bootloader/bootloader.map	29efa3ac70f3a45
+16	75	1642909300736967388	esp-idf/app_update/CMakeFiles/__idf_app_update.dir/esp_app_desc.c.obj	33cdea832e653361
+75	82	1642909300744967892	esp-idf/app_update/libapp_update.a	c66a7b8b68295042
+83	162	1642909300824972933	esp-idf/main/CMakeFiles/__idf_main.dir/blink.c.obj	d91d3de46f790d1a
+162	167	1642909300828973185	esp-idf/main/libmain.a	3ada820b8d3e1979
+167	1670	1642909302301065812	esp-idf/esp32/ld/esp32.project.ld	2f38398e79d35bf6
+1670	2321	1642909302981108546	blink.elf	5abd1ceca94b3c9
+2322	2483	1642909303145118841	.bin_timestamp	c19dbb0b7b79dc97
