@@ -972,3 +972,15 @@
 61044	61059	1642916639300250389	CMakeFiles/wifi_softAP.elf.dir/project_elf_src_esp32.c.obj	ccbeb231f9f07713
 61059	64262	1642916642496139229	wifi_softAP.elf	24c8b9a29cd6a3a8
 64262	64520	1642916642764129918	.bin_timestamp	52fb64eb9cd53438
+0	3459	1642920779044675025	build.ninja	415638eafa25b375
+19	39	1642916589046032053	bootloader-prefix/src/bootloader-stamp/bootloader-build	82d4f91eef8816cb
+19	39	1642916589046032053	bootloader/bootloader.elf	82d4f91eef8816cb
+19	39	1642916589046032053	bootloader/bootloader.bin	82d4f91eef8816cb
+19	39	1642916589046032053	bootloader/bootloader.map	82d4f91eef8816cb
+20	89	1642920779212668638	esp-idf/app_update/CMakeFiles/__idf_app_update.dir/esp_app_desc.c.obj	56cc6e88ff78df82
+89	98	1642920779220668332	esp-idf/app_update/libapp_update.a	c66a7b8b68295042
+20	313	1642920779436660121	esp-idf/main/CMakeFiles/__idf_main.dir/httpserver.c.obj	30d53ab36a7182c3
+313	321	1642920779444659816	esp-idf/main/libmain.a	8f813caeef67f6f2
+321	1730	1642920780824607334	esp-idf/esp32/ld/esp32.project.ld	92dccc5746fb9ce0
+1730	5043	1642920784160480327	wifi_softAP.elf	24c8b9a29cd6a3a8
+5044	5304	1642920784432469962	.bin_timestamp	52fb64eb9cd53438

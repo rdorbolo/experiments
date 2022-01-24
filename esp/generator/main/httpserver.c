@@ -101,8 +101,8 @@ void startHttpServer()
         return;
     }
     char str[64];
-    size_t len;
-    len = fread(str, 1, sizeof(str), fp);
+    
+    size_t len = fread(str, 1, sizeof(str), fp);
     fclose(fp);
     str[len] = 0;
     // Display the read contents from the file
