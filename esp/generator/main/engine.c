@@ -24,22 +24,22 @@
 #define ACK_VAL 0x0                 /*!< I2C ack value */
 #define NACK_VAL 0x1                /*!< I2C nack value */
 
-static gpio_num_t i2c_gpio_sda = 21;
-static gpio_num_t i2c_gpio_scl = 19;
-static uint32_t i2c_frequency = 1000000;
-static i2c_port_t i2c_port = I2C_NUM_0;
+static const gpio_num_t i2c_gpio_sda = 21;
+static const gpio_num_t i2c_gpio_scl = 19;
+static const uint32_t i2c_frequency = 1000000;
+static const i2c_port_t i2c_port = I2C_NUM_0;
 
-static const char *TAG = "TACH";
+static const char TAG[] = "TACHER";
 
-char *STATUS_IDLE = "idle";
-char *STATUS_VOLTS_HIGH = "vHigh";
-char *STATUS_PWM_USER_LIMITITED = "MinPWMLimit";
-char *STATUS_AMPS_HIGH = "aHigh";
-char *STATUS_ADJUSTING = "adjusting";
+char *STATUS_IDLE = "idle";                      // NOLINT
+char *STATUS_VOLTS_HIGH = "vHigh";               // NOLINT
+char *STATUS_PWM_USER_LIMITITED = "MinPWMLimit"; // NOLINT
+char *STATUS_AMPS_HIGH = "aHigh";                // NOLINT
+char *STATUS_ADJUSTING = "adjusting";            // NOLINT
 
-uint altCnt = 0;
-uint altCntLast = 0;
-uint timerCnt = 0;
+uint altCnt = 0;     // NOLINT
+uint altCntLast = 0; // NOLINT
+uint timerCnt = 0;   // NOLINT
 
 int gpio35Val;
 int gpio35ValMin = 10000000;
@@ -87,8 +87,7 @@ void getVolts(void *parameters)
 
         if (avgStart)
         {
-            int i;
-            for (i = 0; i < buffSize; i++)
+            for (int i = 0; i < buffSize; i++)
             {
                 adcAvgBuf[i] = gpio35Val;
             }
@@ -99,11 +98,11 @@ void getVolts(void *parameters)
         if (bufIndex >= buffSize - 1)
             bufIndex = 0;
         else
+        {
             bufIndex++;
-
-        int i;
+        }
         adcAvg = 0;
-        for (i = 0; i < buffSize; i++)
+        for (int i = 0; i < buffSize; i++)
         {
             adcAvg += adcAvgBuf[i];
         }
@@ -112,10 +111,13 @@ void getVolts(void *parameters)
         gpio35ValAvg = adcAvg;
 
         if (adcAvg > gpio35ValMax)
+        {
             gpio35ValMax = adcAvg;
+        }
         if (adcAvg < gpio35ValMin)
+        {
             gpio35ValMin = adcAvg;
-
+        }
         if ((currentTime - lastTime) > 1000 /*100=1sec*/)
         {
 
@@ -320,9 +322,10 @@ void logSample(Stat_t *shunt_data, int16_t data)
 void getAmps(void *parameters)
 {
 
-    int chip_addr = 0x48;
+    uint8_t chip_addr = 0x48;
     int data_addr = 0x0;
-    uint8_t dataH, dataL;
+    uint8_t dataH = 0;
+    uint8_t dataL = 0;
     int count = 0;
     while (1)
     {
@@ -332,7 +335,7 @@ void getAmps(void *parameters)
 
         // Select the Data Register
         i2c_master_start(cmd);
-        i2c_master_write_byte(cmd, chip_addr << 1 | WRITE_BIT, ACK_CHECK_EN);
+        i2c_master_write_byte(cmd, chip_addr << 1U | WRITE_BIT, ACK_CHECK_EN);
         i2c_master_write_byte(cmd, 0x0, ACK_CHECK_EN); // select config data register
 
         // Read from the data registers
@@ -353,18 +356,18 @@ void getAmps(void *parameters)
         i2c_master_write_byte(cmd, chip_addr << 1 | WRITE_BIT, ACK_CHECK_EN);
         i2c_master_write_byte(cmd, 0x1, ACK_CHECK_EN); // select config register
 
-        const uint8_t beginConv = 0b1u << 7;
+        const uint8_t beginConv = 0b1U << 7;
         uint8_t muxSel;
         uint8_t gain;
         if (count % 2 == 0)
         {
-            muxSel = 0b000u << 4; // differential A0 A1
-            gain = 0b101u << 1;
+            muxSel = 0b000U << 4; // differential A0 A1
+            gain = 0b101U << 1;
         }
         else
         {
-            muxSel = 0b011u << 4;
-            gain = 0b101u << 1; // differential A2 and A3
+            muxSel = 0b011U << 4;
+            gain = 0b101U << 1; // differential A2 and A3
         }
 
         i2c_master_write_byte(cmd, beginConv | muxSel | gain, ACK_CHECK_EN); // channel 1
@@ -383,7 +386,7 @@ void getAmps(void *parameters)
         // shunt1_data.currentSample = -data;
         else
             logSample(&shunt0_data, -data);
-    
+
         if (ret == ESP_OK)
         {
             /*
@@ -396,20 +399,20 @@ void getAmps(void *parameters)
             //               printf("%d %d  %f  %f mV \n", shunt0_data, shunt1_data, ((float)shunt0_data) * k0, (float)shunt1_data * k1);
         }
         */
-    }
-    else if (ret == ESP_ERR_TIMEOUT)
-    {
-        ESP_LOGW(TAG, "I2C Bus is busy");
-    }
-    else
-    {
-        ESP_LOGW(TAG, "I2C Read failed");
-    }
+        }
+        else if (ret == ESP_ERR_TIMEOUT)
+        {
+            ESP_LOGW(TAG, "I2C Bus is busy");
+        }
+        else
+        {
+            ESP_LOGW(TAG, "I2C Read failed");
+        }
 
-    i2c_cmd_link_delete(cmd);
+        i2c_cmd_link_delete(cmd);
 
-    count++;
-}
+        count++;
+    }
 }
 
 void updateLoop(void *parameters)
