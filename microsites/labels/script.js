@@ -29,6 +29,7 @@ var body = document.getElementsByTagName("body")[0];
 
 const defaultDocId = '1nFHWrJCpSuChvmC85ys8Ov92j2dvZqQVW9-k-QqBMxc';
 var docId;// = '1nFHWrJCpSuChvmC85ys8Ov92j2dvZqQVW9-k-QqBMxc'
+let sheetname = "2023"
 var b;
 var spreadsheet;
 var labels  = 0;
@@ -36,6 +37,7 @@ var labels  = 0;
 var statsDiv;
 var labelCountDiv;
 var docIdHolderDiv;
+let docSheetnameDiv;
 var docIdDiv;
 var docIdEditDiv;
 var docTitleDiv;
@@ -63,6 +65,9 @@ docIdDiv = document.createElement("div");
 docIdDiv.classList.add("docIdDiv");
 docIdDiv.innerHTML = "doc id: " + docId;
 
+docSheetnameDiv = document.createElement("div");
+docSheetnameDiv.innerHTML = 'sheetname: "' + sheetname + '" (hardcoded in Js)'; 
+
 docIdEditDiv = document.createElement("div");
 docIdEditDiv.classList.add("docIdEditDiv");
 docIdEditDiv.innerHTML = "&#128393";
@@ -86,6 +91,7 @@ docIdHolderDiv.append(docIdEditDiv);
 statsDiv.append(docTitleDiv);
 statsDiv.append(labelCountDiv);
 statsDiv.append(docIdHolderDiv);
+statsDiv.append(docSheetnameDiv);
 
 
 
@@ -190,9 +196,10 @@ var test;
 
 function loadDoc() {
 	labelCountDiv.innerHTML = "Loading data values"
-	fetch('https://sheets.googleapis.com/v4/spreadsheets/' + docId + '/values/Collected?key=AIzaSyCcxs61NVz6a21Q-v3bDC1nHF3Ctt3aBP4')
+	//fetch('https://sheets.googleapis.com/v4/spreadsheets/' + docId + '/values/Collected?key=AIzaSyCcxs61NVz6a21Q-v3bDC1nHF3Ctt3aBP4')
+	fetch('https://sheets.googleapis.com/v4/spreadsheets/' + docId + '/values/' + sheetname + '?key=AIzaSyCcxs61NVz6a21Q-v3bDC1nHF3Ctt3aBP4')
 		.then(function (response) {
-			console.log(response.type);
+			console.log("response.type (normally cors): " + response.type);
 			response.json().then(
 				(r) => {
 					test = r;
@@ -224,6 +231,8 @@ fetch('https://sheets.googleapis.com/v4/spreadsheets/' + docId + '?key=AIzaSyCcx
 //.catch(error => console.log('Error1:', error))
 .then(
 		(r) => {
+			console.log("Spreadsheet Meta Info");
+			console.log(r);
 			test = r;
 			docTitleDiv.innerHTML =  r.properties.title;
 			loadDoc();
