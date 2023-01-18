@@ -38,7 +38,9 @@ void startHttpServer()
     extern int gpio2PwmMin;
     extern int gpio2PwmMax;
     extern enum State state;
-    extern int busyCnt; // softap_example_main.c
+    extern int busyCnt;               // softap_example_main.c
+    extern char stationIPAddr[];      // softap_example_main.c
+    extern int * stationRSSI;          // softap_example_main.c
     extern Stat_t shunt0_data, shunt1_data;
     extern int shunt0Target;
 
@@ -116,6 +118,8 @@ void startHttpServer()
     dest_addr_ip4->sin_addr.s_addr = htonl(INADDR_ANY); // from Any address / interface
     dest_addr_ip4->sin_family = AF_INET;                // IPV4
     dest_addr_ip4->sin_port = htons(HTTPSERVER_PORT);   // Listen Port
+
+
     ip_protocol = IPPROTO_IP;                           // IP
 
     while (1)
@@ -146,7 +150,7 @@ void startHttpServer()
         }
 
         char messageIn[200];
-        char messageBody[400];
+        char messageBody[500];
         bool keepAlive = false;
         struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
         
@@ -155,6 +159,7 @@ void startHttpServer()
         struct timeval to;
         u16_t port;
         u32_t addr;
+        u32_t listen_sock_count = 0;
         while (1)
         {
             if (busyCnt < 3)
@@ -166,7 +171,8 @@ void startHttpServer()
             }
             else
             {
-                ESP_LOGI(TAG, "Socket listening");
+                listen_sock_count++;
+                ESP_LOGI(TAG, "Socket listening, listen_sock_count = %d", listen_sock_count);
 
                 sock = accept(listen_sock, (struct sockaddr *)&source_addr, &addr_len);
                 if (sock < 0)
@@ -213,12 +219,12 @@ void startHttpServer()
 
                 if (len < 0)
                 {
-                    ESP_LOGE(TAG, "Error occurred during receiving: errno %d", errno);
+                    ESP_LOGE(TAG, "Error occurred during receiving: errno %d, httpHeader %d", errno, httpHeader);
                     break;
                 }
                 else if (len == 0)
                 {
-                    ESP_LOGW(TAG, "Connection closed");
+                    ESP_LOGW(TAG, "Connection closed lenght==0");
                     break;
                 }
                 else
@@ -374,6 +380,8 @@ void startHttpServer()
                                     pwm1 = ledc_get_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
                                     const char *json = " { "
                                                        " \"ts\":%d, "
+                                                       " \"ipAddr\": \"%s\", "
+                                                       " \"rssi\": %d, "
                                                        " \"altCnt\": %d, "
                                                        " \"status\": \"%s\", "
                                                        " \"gpio35Val\": %d, "
@@ -381,6 +389,7 @@ void startHttpServer()
                                                        " \"gpio35ValMax\": %d, "
                                                        " \"state\": %d, "
                                                        " \"pwm1\" : %d, "
+                                                       " \"shunt0TargetEcho\" : %d,"
                                                        " \"shunt0\": %d, "
                                                        " \"shunt0Cnt\": %d, "
                                                        " \"shunt0Sum\": %d, "
@@ -391,6 +400,8 @@ void startHttpServer()
 
                                     bytesJson = snprintf(messageBody, sizeof(messageBody), json,
                                                          ts, 
+                                                         stationIPAddr,
+                                                         *stationRSSI,
                                                          altCnt, 
                                                          status, 
                                                          gpio35Val, 
@@ -398,7 +409,7 @@ void startHttpServer()
                                                          gpio35ValMax, 
                                                          state, 
                                                          pwm1, 
-                                                         shunt0_data.currentSample, shunt0_data.sampleCnt, shunt0_data.sampleSum, shunt0_data.minValue, shunt0_data.maxValue,
+                                                         shunt0Target, shunt0_data.currentSample, shunt0_data.sampleCnt, shunt0_data.sampleSum, shunt0_data.minValue, shunt0_data.maxValue,
                                                          shunt1_data.currentSample);
 
 
@@ -411,7 +422,8 @@ void startHttpServer()
                                     send(sock, messageIn, bytes, 0);
                                     bytes = snprintf(messageIn, sizeof(messageIn), "Connection: keep-alive\r\n");
                                     send(sock, messageIn, bytes, 0);
-
+                                    bytes = snprintf(messageIn, sizeof(messageIn), "Access-Control-Allow-Origin: *\r\n");
+                                    send(sock, messageIn, bytes, 0);
                                     bytes = snprintf(messageIn, sizeof(messageIn), "Content-Type: application/json\r\n");
                                     send(sock, messageIn, bytes, 0);
                                     bytes = snprintf(messageIn, sizeof(messageIn), "Content-Length: %d\r\n", bytesJson);
