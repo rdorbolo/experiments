@@ -1,6 +1,9 @@
 "use strict";
 
 console.log("hello world");
+import { slider2 } from './widgets.js';
+
+
 
 var currenttime = new Date().getTime();
 var lastTimeStamp = 0; // millsecs/10
@@ -28,6 +31,7 @@ buttonEl.onclick = onclickButton;
 
 
 var timeEl         = document.createElement("div");
+var ipEl           = document.createElement("div");
 var altCntEl       = document.createElement("div");
 var chargeStatusEl = document.createElement("div");
 var avgDeltaEl     = document.createElement("div");
@@ -38,6 +42,7 @@ statusEl.appendChild(stateEl);
 statusEl.appendChild(buttonEl);
 
 statusEl.appendChild(timeEl);
+statusEl.appendChild(ipEl);
 statusEl.appendChild(altCntEl);
 statusEl.appendChild(chargeStatusEl);
 statusEl.appendChild(avgDeltaEl);
@@ -116,21 +121,27 @@ function Slider(name, min, max, initialVal, io) {
 var pwmSlider    = new Slider("PWM1", 0, 512, 512);
 var pwmSliderMin = new Slider("PWM1 Min Limit", 0, 512, 512, "input");
 var pwmSliderMax = new Slider("PWM1 Max Limit", 0, 512, 512, "input");
-var shunt0Slider = new Slider("Shunt0 (generator) Limit / Value", -2000, 30000, 0);
-var shunt1Slider = new Slider("Shunt1 (Battery) NA / Value", -2000, 30000, 0, "output");
+
+var shunt1Slider = new Slider("Shunt1 (Battery) NA / Value", -30000, 30000, 0, "output");
 
 var adcTarget    = new Slider("gpio35 ADC Target", 0, 1023, 0, "input");
 adcTarget.textFunc = (o) => {return " " + (12.6/620*o.sliderEl.value).toFixed(1) + " volts"}
 
+
+let testSlider1 = new slider2("Generator (Shunt0)", -2000, 30000, 0);  
+let testSlider2 = new slider2("Battery   (Shunt1)", -2000, 30000, 0, true);  
+window.testSlider = testSlider1;
 
 
 
 statusEl.appendChild(pwmSlider.el);
 statusEl.appendChild(pwmSliderMin.el);
 statusEl.appendChild(pwmSliderMax.el)
-statusEl.appendChild(shunt0Slider.el);
+
 statusEl.appendChild(shunt1Slider.el);
 statusEl.appendChild(adcTarget.el);
+statusEl.appendChild(testSlider1.el);
+statusEl.appendChild(testSlider2.el);
 
 
 var voltageOuterEl = document.createElement("div");
@@ -146,13 +157,19 @@ voltageEl.appendChild(voltageElCenter);
 voltageOuterEl.appendChild(voltageEl);
 statusEl.appendChild(voltageOuterEl);
 
+var debugIpAddrEl = document.createElement("input");
+statusEl.appendChild(debugIpAddrEl);
+debugIpAddrEl.oninput = (e) => {e.stopPropagation();  console.log("ip input"); localStorage.setItem('debugIpAddr', debugIpAddrEl.value);}
+if (localStorage.getItem('debugIpAddr')) debugIpAddrEl.value = localStorage.getItem('debugIpAddr');
 
-
+var debugEl       = document.createElement("div");
+statusEl.appendChild(debugEl);
 
 
 
 var lastInput;  // last Slider to move
-statusEl.oninput = (e) => { event = true; lastInput=e.target.me; e.target.me.updateText(); /*console.log(e.srcElement.value)*/ }
+statusEl.oninput = (e) => {console.log("input Event"); window.e = e; console.log(e.target); event = true; lastInput=e.target.me; e.target.me.updateText();  }
+
 
 
 var styleEl = document.createElement('style');
@@ -190,6 +207,7 @@ xmlhttp.onreadystatechange = function () {
 
        // timeEl.innerText = "timeStamp:" + Math.floor(hours)  + ":" + Math.floor(minutes) + ":" + Math.floor(seconds) /*+ (seconds - Math.floor(seconds))*/ +   " ("+ dataObj.ts + ")";
         timeEl.innerText = "timeStamp: " + hours + ":" + minutes + ":" + seconds + "." + tenths +   " ("+ dataObj.ts + ")";
+        ipEl.innerText   = "Ip Address: " + dataObj.ipAddr + " (rssi: " + dataObj.rssi + " dbm)";
         altCntEl.innerText = "AltCnt: " + dataObj.altCnt;
         pwm1El.innerText = "Pwm1:" + dataObj.pwm1;
         chargeStatusEl.innerText = "Status: " + dataObj.status;
@@ -204,8 +222,14 @@ xmlhttp.onreadystatechange = function () {
             pwmSlider.resetValue = dataObj.pwm1;
         }
         pwmSlider.value = dataObj.pwm1;
-        shunt0Slider.value = dataObj.shunt0Sum/dataObj.shunt0Cnt;
-        shunt1Slider.value = dataObj.shunt1;
+
+        testSlider1.value = dataObj.shunt0;
+        testSlider1.valueEcho = dataObj.shunt0TargetEcho;
+        testSlider1.updateText();
+
+
+        testSlider2.value = dataObj.shunt1;
+        testSlider2.updateText();
 
         var stateTxt = "Undefined";
         engineState = dataObj.state;
@@ -304,19 +328,27 @@ xmlhttp.onerror = function () {
 
 function getData(event) {
 
+    var prefix = "";
+    
+    if (debugIpAddrEl.value && debugIpAddrEl.value.length>0) {
+        prefix = "http://" + debugIpAddrEl.value + "/";
+    }
+    //console.log(debugIpAddrEl.value + "prefix:" + prefix);
+
+
     var outputPwmValue = -1;
     if (lastInput === pwmSlider) outputPwmValue = pwmSlider.value; 
 
-    if (event | newState) xmlhttp.open("GET", "data/pwm=" + 
+    if (event | newState) xmlhttp.open("GET", prefix + "data/pwm=" + 
     outputPwmValue + 
     ",0," + 
     adcTarget.value + "," + 
     pwmSliderMin.value + "," + 
     pwmSliderMax.value + "," + 
     newState + "," +
-    shunt0Slider.value  + "," +
+    testSlider1.value  + "," +
     0,  true);
-    else xmlhttp.open("GET", "data", true);
+    else xmlhttp.open("GET", prefix + "data", true);
     readyForData = false;
     newState = 0;
     xmlhttp.send();
@@ -332,22 +364,26 @@ function onclickButton(event) {
 
 
 
-//var timer = setInterval( getData, 500);
+
 var lastAnimationTime = 0;
 var interval = 500;// ms
 var requestTime = 0;
+var debugCount = 500;
 function animator(timeStamp) {
-    if ((lastAnimationTime + interval < timeStamp) || event) {
+    debugEl.innerHTML = "debugCount: " + debugCount;
+    if (event) debugCount=5000;
+    if (  (lastAnimationTime + interval < timeStamp)&&(debugCount >0) || event) {
         //console.log("" + timeStamp + " " + readyForData);
         lastAnimationTime = Math.floor((timeStamp / interval)) * interval;
         if (readyForData) {
-
+            debugCount--;
             getData(event);
             event = false;
             requestTime = timeStamp;
         }
     
     }
+
     if (timeStamp > requestTime + 1000) {
         //console.log("old data!");
         stateEl.innerText = "Link Error " + Math.round( (timeStamp - requestTime) / 1000) + " (secs)";

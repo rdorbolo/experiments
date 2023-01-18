@@ -32,6 +32,11 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "TRUE")
 endif()
 
+# Set default install directory permissions.
+if(NOT DEFINED CMAKE_OBJDUMP)
+  set(CMAKE_OBJDUMP "/home/rick/.espressif/tools/xtensa-esp32-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-objdump")
+endif()
+
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include/mbedtls" TYPE FILE PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ FILES
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/aes.h"
@@ -55,6 +60,8 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/cmac.h"
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/compat-1.3.h"
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/config.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/config_psa.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/constant_time.h"
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/ctr_drbg.h"
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/debug.h"
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/des.h"
@@ -92,6 +99,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/platform_time.h"
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/platform_util.h"
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/poly1305.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/psa_util.h"
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/ripemd160.h"
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/rsa.h"
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/rsa_internal.h"
@@ -112,6 +120,26 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/x509_crt.h"
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/x509_csr.h"
     "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/mbedtls/xtea.h"
+    )
+endif()
+
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include/psa" TYPE FILE PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ FILES
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto_builtin_composites.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto_builtin_primitives.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto_compat.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto_config.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto_driver_common.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto_driver_contexts_composites.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto_driver_contexts_primitives.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto_extra.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto_platform.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto_se_driver.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto_sizes.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto_struct.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto_types.h"
+    "/home/rick/esp/esp-idf/components/mbedtls/mbedtls/include/psa/crypto_values.h"
     )
 endif()
 

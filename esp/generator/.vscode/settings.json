@@ -1,4 +1,9 @@
 {
     "idf.adapterTargetName": "esp32",
-    "idf.port": "/dev/ttyUSB0"
+    "idf.port": "/dev/ttyUSB0",
+    "files.associations": {
+        "freertos.h": "c",
+        "*.ipp": "c"
+    },
+    "idf.flashType": "UART"
 }

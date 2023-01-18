@@ -59,10 +59,14 @@ typedef struct networkStatus
 } networkStatus_t;
 
 networkStatus_t networkStatus = {
-    .internetSSID = "dnet",
+    .internetSSID = "DNET Fast",
     .internetPassword = "andrewhooban92126",
     .gridSSID = "grid",
+    .internetRSSI = -999,
     .IAmRoot = 0};
+
+char stationIPAddr[64] = "not ready";
+int * stationRSSI = &(networkStatus.internetRSSI);
 
 //TimerHandle_t xTimerSocket;
 //int listen_sock;
@@ -364,6 +368,7 @@ void wifi_init_softap(void)
     // Get Stations IP adress
     esp_netif_get_ip_info(netif, &ip_info);
     esp_ip4addr_ntoa(&(ip_info.ip), text, sizeof(text));
+    printf("\ngetting Stations IP address in function wifi_init_softap() \n");
     printf("wifi_init_softap() ip_info.ip ip address: %s\n", text);
 
     // Get Station's gateway
@@ -395,42 +400,43 @@ static void tcp_client_task(void *pvParameters)
     int ip_protocol = 0;
 
     //vTaskDelay(4000 / portTICK_PERIOD_MS);
-    printf("trying to send from client to server\n");
+    ESP_LOGI(TAG, "trying to send from client to server\n");
 
     while (1)
     {
-        printf("\ntrying to send from client to server\n");
+        ESP_LOGI(TAG, "restarting loop in tcp_client_task() ");
+        ESP_LOGI(TAG, "trying to send from client to server");
 
         while (1)
         {
             wifi_ap_record_t apInfo;
             int apInfoReturnVal;
             apInfoReturnVal = esp_wifi_sta_get_ap_info(&apInfo);
-            printf("apInfoReturnVal = %d\n", apInfoReturnVal);
+            ESP_LOGI(TAG, "apInfoReturnVal = %d", apInfoReturnVal);
 
             if (apInfoReturnVal == ESP_OK)
             {
 
                 esp_netif_get_ip_info(netif_sta, &ip_info);
 
-                printf("ssid = %s gw: %x\n", apInfo.ssid, ip_info.gw.addr);
+                ESP_LOGI(TAG, "ssid = %s gw: %x", apInfo.ssid, ip_info.gw.addr);
 
                 break;
             }
             else if (apInfoReturnVal == ESP_ERR_WIFI_CONN)
             {
-                printf("The station interface don’t initialized\n");
+                ESP_LOGI(TAG, "The station interface don’t initialized\n");
             }
             else if (apInfoReturnVal == ESP_ERR_WIFI_NOT_CONNECT)
             {
-                printf("The station is in disconnect status\n");
+                ESP_LOGI(TAG, "The station is in disconnect status\n");
                 esp_err_t err = esp_wifi_disconnect();
-                printf("err: %d\n", err);
+                ESP_LOGI(TAG, "err: %d\n", err);
                 ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config_sta));
                 err = esp_wifi_connect();
-                printf("err: %d\n", err);
+                ESP_LOGI(TAG, "err: %d\n", err);
                 if (err)
-                    printf("connect failed error code: %d\n", err);
+                    ESP_LOGI(TAG, "connect failed error code: %d\n", err);
                 vTaskDelay(3000 / portTICK_PERIOD_MS);
             }
         }
@@ -509,7 +515,7 @@ static void tcp_client_task(void *pvParameters)
 
             //esp_wifi_connect();
 
-            vTaskDelay(60000 / portTICK_PERIOD_MS);
+            vTaskDelay(600000 / portTICK_PERIOD_MS);
         }
         else
         {
@@ -641,7 +647,7 @@ void stationScanner(void *params)
         {
             networkStatus.internetRSSI = stationScan((void *)networkStatus.internetSSID);
             networkStatus.meshRSSI = stationScan((void *)"mesh");
-            printf("network status internet %d dBm, mesh %d dBm\n", networkStatus.internetRSSI, networkStatus.meshRSSI);
+            printf("stationScanner Network Status internet %d dBm, mesh %d dBm\n", networkStatus.internetRSSI, networkStatus.meshRSSI);
 
             if (networkStatus.meshRSSI == -127)
                 networkStatus.IAmRoot = 1;
@@ -672,8 +678,10 @@ void stationScanner(void *params)
                     ip3 = (0x000000ff & ip_info.gw.addr);
                     printf("Root Station connection is valid. SSID = %s gw: %x\n", apInfo.ssid, ip_info.gw.addr);
                     printf("Root Station connection is valid. SSID = %s gw: %d.%d.%d.%d\n", apInfo.ssid, ip3, ip2, ip1, ip0);
-                    printf("This node'  s ip address from station %s is ip_info.ip.addr : 0x%x (%s) \n",
-                           apInfo.ssid, ip_info.ip.addr, toIpString(ip_info.ip.addr));
+                    toIpString(ip_info.ip.addr);
+                    strncpy(stationIPAddr,ipString, sizeof(stationIPAddr));
+                    printf("This node's ip address from station %s is ip_info.ip.addr : 0x%x (%s) \n",
+                           apInfo.ssid, ip_info.ip.addr,stationIPAddr);
                 }
                 else
                 {
@@ -708,7 +716,7 @@ void stationScanner(void *params)
 
             if (apInfoReturnVal == ESP_ERR_WIFI_CONN)
             {
-                printf("The station interface don’t initialized\n");
+                printf("The station interface did not initialized\n");
             }
             if (apInfoReturnVal == ESP_ERR_WIFI_NOT_CONNECT || connectedToCorrectStation == false)
             {
@@ -720,6 +728,12 @@ void stationScanner(void *params)
                 printf("err: %d\n", err);
                 if (err)
                     printf("connect failed error code: %d\n", err);
+                else {
+                    printf("Station is connected to %s\n", networkStatus.internetSSID);
+                    esp_netif_get_ip_info(netif_sta, &ip_info);
+                    ESP_LOGI(TAG, "station ssid = %s gw: %x", apInfo.ssid, ip_info.gw.addr);
+
+                }
             }
         }
         else
@@ -727,7 +741,7 @@ void stationScanner(void *params)
             printf("Skipping station because busy, busyCnt=%d\n", busyCnt);
             busyCnt--;
         }
-        vTaskDelay(60000 / portTICK_PERIOD_MS);
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
     }
 }
 
@@ -751,9 +765,9 @@ void app_main(void)
     if (chipid[2] == 0xa8 && chipid[3] == 0x59 && chipid[4] == 0x6a && chipid[5] == 0xa9)
         networkStatus.IAmRoot = 1;
     if (networkStatus.IAmRoot == 0)
-        printf("operating as client\n");
+        printf("Operating as client\n");
     else
-        printf("operating as server\n");
+        printf("Operating as server\n");
 
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
@@ -767,7 +781,7 @@ void app_main(void)
     wifi_init_softap();
     xTaskCreate(tcp_server_task, "tcp_server", 4096, (void *)AF_INET, 5, NULL);
 
-    printf("network status internet %d, mesh %d\n", networkStatus.internetRSSI, networkStatus.meshRSSI);
+    printf("Network Status internet %d, mesh %d\n", networkStatus.internetRSSI, networkStatus.meshRSSI);
 
     xTaskCreate(stationScanner, "stationScanner", 4096, NULL, 5, NULL);
 

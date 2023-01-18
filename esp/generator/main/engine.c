@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "esp_log.h"
 #include "esp_timer.h"
-#define INCLUDE_xTaskDelayUntil 1
+//#define INCLUDE_xTaskDelayUntil 1
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
@@ -29,7 +29,7 @@ static const gpio_num_t i2c_gpio_scl = 19;
 static const uint32_t i2c_frequency = 1000000;
 static const i2c_port_t i2c_port = I2C_NUM_0;
 
-static const char TAG[] = "TACHER";
+static const char TAG[] = "engine.c";
 
 char *STATUS_IDLE = "idle";                      // NOLINT
 char *STATUS_VOLTS_HIGH = "vHigh";               // NOLINT
@@ -118,7 +118,7 @@ void getVolts(void *parameters)
         {
             gpio35ValMin = adcAvg;
         }
-        if ((currentTime - lastTime) > 1000 /*100=1sec*/)
+        if ((currentTime - lastTime) > 10000 /*100=1sec*/)
         {
 
             uint64_t timerValue;
@@ -499,14 +499,14 @@ void updateLoop(void *parameters)
 
         status = statusCalc; // Update the global status message now
 
-        if (count % 60 == 0)
+        if (count % 12000 == 0)
         {
             int64_t t = esp_timer_get_time();
             int32_t tt = (int32_t)(t / 1000);
             int32_t deltaT = tt - lastTime;
             lastTime = tt;
 
-            printf("\n count= %d, tt=%d deltaTime=%d %s\n", count, tt, deltaT, time_status);
+            printf("\n Engine.c: count= %d, tt=%d deltaTime=%d %s\n", count, tt, deltaT, time_status);
         }
     }
 }
