@@ -201,6 +201,7 @@ void startHttpServer()
             bool putLine = false;
             bool getReq = false;
             bool putReq = false;
+            bool optionReq = false;
             bool contentLengthLine = false;
             int contentLength = -1;
             bool httpHeader = true;
@@ -229,6 +230,7 @@ void startHttpServer()
                 }
                 else
                 {
+                    printf("%c", messageIn[0]);
                     if (httpHeader)
                     {
                         if (headerLineIndex < (sizeof(headerLine) - 1) && ((messageIn[0] != '\n') || messageIn[0] != '\r'))
@@ -250,6 +252,13 @@ void startHttpServer()
                             putLine = true;
                             putReq = true;
                         }
+
+                       if (lastBytes[3] == 'O' && lastBytes[2] == 'P' && lastBytes[1] == 'T' && lastBytes[0] == 'I' && headerLineIndex == 5)
+                        {
+                            
+                            optionReq = true;
+                        }
+
 
                         // Content-Length header line
                         if (lastBytes[3] == 'C' && lastBytes[2] == 'o' && lastBytes[1] == 'n' && lastBytes[0] == 't' && headerLineIndex == 5 && putReq)
@@ -488,6 +497,11 @@ void startHttpServer()
                                                 bytes = snprintf(messageIn, sizeof(messageIn), "Content-Type: text/javascript\r\n");
                                                 send(sock, messageIn, bytes, 0);
                                             }
+                                            else if (strcmp("json", suffix) == 0)
+                                            {
+                                                bytes = snprintf(messageIn, sizeof(messageIn), "Content-Type: application/json\r\n");
+                                                send(sock, messageIn, bytes, 0);
+                                            }
                                         }
 
                                         bytes = snprintf(messageIn, sizeof(messageIn), "\r\n");
@@ -505,18 +519,36 @@ void startHttpServer()
                                     }
                                 }
                             }
-                            if (putReq)
+                            else if (putReq)
                             {
+
+                                printf("put request file %s\n", filename);
+
                                 bytes = snprintf(messageIn, sizeof(messageIn), "HTTP/1.1 100 continue\r\n");
                                 send(sock, messageIn, bytes, 0);
-                                bytes = snprintf(messageIn, sizeof(messageIn), "HTTP/1.1 200 OK\r\n");
+                                bytes = snprintf(messageIn, sizeof(messageIn), "\r\n");
                                 send(sock, messageIn, bytes, 0);
 
-                                //bytes = snprintf(messageIn, sizeof(messageIn), "Content-Type: text/plain\r\n");
-                                //send(sock, messageIn, bytes, 0);
+                                bytes = snprintf(messageIn, sizeof(messageIn), "HTTP/1.1 200 OK\r\n");
+                                send(sock, messageIn, bytes, 0);
+                                bytes = snprintf(messageIn, sizeof(messageIn), "Access-Control-Allow-Origin: *\r\n");
+                                send(sock, messageIn, bytes, 0);
+                                bytes = snprintf(messageIn, sizeof(messageIn), "Content-Length: 12\r\n");
+                                send(sock, messageIn, bytes, 0);
+                                bytes = snprintf(messageIn, sizeof(messageIn), "Content-Type: text/plain; charset=utf-8\r\n");
+                                send(sock, messageIn, bytes, 0);
+
+
+ 
 
                                 bytes = snprintf(messageIn, sizeof(messageIn), "\r\n");
                                 send(sock, messageIn, bytes, 0);
+ 
+                                bytes = snprintf(messageIn, sizeof(messageIn), "hello world!");
+                                send(sock, messageIn, bytes, 0);
+
+                               
+
 
                                 // Open for URL for writting
 
@@ -527,10 +559,46 @@ void startHttpServer()
                                     //return;
                                 }
                             }
+                            else if (optionReq) {
+                                ESP_LOGI(TAG, "Option Req");
+                                bytes = snprintf(messageIn, sizeof(messageIn), "HTTP/1.1 200 OK\r\n");
+                                send(sock, messageIn, bytes, 0);
+                                bytes = snprintf(messageIn, sizeof(messageIn), "Access-Control-Allow-Origin: *\r\n");
+                                send(sock, messageIn, bytes, 0);
+                                bytes = snprintf(messageIn, sizeof(messageIn), "Access-Control-Allow-Methods: POST, GET, PUT, OPTIONS\r\n");
+                                send(sock, messageIn, bytes, 0);
+                                bytes = snprintf(messageIn, sizeof(messageIn), "Access-Control-Max-Age: 86400\r\n");
+                                send(sock, messageIn, bytes, 0);
+                               
+                                bytes = snprintf(messageIn, sizeof(messageIn), "Content-Length: 0\r\n");
+                                send(sock, messageIn, bytes, 0);
+                                bytes = snprintf(messageIn, sizeof(messageIn), "Content-Type: text/plain; charset=utf-8\r\n");
+                                send(sock, messageIn, bytes, 0);
+                                bytes = snprintf(messageIn, sizeof(messageIn), "\r\n");
+                                send(sock, messageIn, bytes, 0);
+
+
+ 
+
+                                bytes = snprintf(messageIn, sizeof(messageIn), "\r\n");
+                                send(sock, messageIn, bytes, 0);
+
+                            }
+                            else {
+                                ESP_LOGW(TAG, "Not a PUT OR GET or OPTION!!");
+                                printf("Not a PUT OR GET!!");
+                            }
                         }
                     }
                     else // (!httpHeader)
                     {
+                        printf("---");
+                        for (int i = 0; i<len; i++) {
+                            printf("%c", messageIn[i]);
+                        }
+                        printf("---\n");
+                        
+                        
                         bodyLen += len;
                         if (fp)
                             fwrite(messageIn, 1, len, fp);
