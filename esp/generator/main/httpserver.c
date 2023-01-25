@@ -22,7 +22,6 @@
 
 static const char *TAG = "HTTPSERVER";
 
- 
 void startHttpServer()
 {
     ESP_LOGI(TAG, "Starting httpserver on Port %d", HTTPSERVER_PORT);
@@ -30,7 +29,7 @@ void startHttpServer()
     ESP_LOGI(TAG, "Initializing SPIFFS");
 
     extern int altCnt;       // from engine.c
-    extern char * status;    // from engine.c
+    extern char *status;     // from engine.c
     extern int gpio35Val;    // from engine.c
     extern int gpio35ValMin; // from engine.c
     extern int gpio35ValMax; // from engine.c
@@ -38,12 +37,17 @@ void startHttpServer()
     extern int gpio2PwmMin;
     extern int gpio2PwmMax;
     extern enum State state;
-    extern int busyCnt;               // softap_example_main.c
-    extern char stationIPAddr[];      // softap_example_main.c
-    extern int * stationRSSI;          // softap_example_main.c
+    extern int busyCnt;          // softap_example_main.c
+    extern char stationIPAddr[]; // softap_example_main.c
+    extern int *stationRSSI;     // softap_example_main.c
     extern Stat_t shunt0_data, shunt1_data;
     extern int shunt0Target;
 
+    // Global varables used by engine.c
+    extern int32_t shuntOffset0;
+    extern int32_t shuntOffset1;
+    int checkValue = -1;
+    int checkCalc = -10000000;
 
     esp_vfs_spiffs_conf_t conf = {
         .base_path = "/spiffs",
@@ -104,12 +108,57 @@ void startHttpServer()
         return;
     }
     char str[64];
-    
+
     size_t len = fread(str, 1, sizeof(str), fp);
     fclose(fp);
     str[len] = 0;
     // Display the read contents from the file
     ESP_LOGI(TAG, "Read from hello.txt: %s", str);
+
+    // ***********************************************************
+    //
+    // Read the parameter.txt file 
+    //
+     // ***********************************************************
+   
+    shuntOffset0 = 0;
+    shuntOffset1 = 0;
+    int count = 0;
+    fp = fopen("/spiffs/parameters.txt", "r");
+    if (fp != NULL)
+    {
+
+        count = fscanf(fp, "shuntOffset0:%d, shuntOffset1:%d, checkValue:%d", &shuntOffset0, &shuntOffset1, &checkValue);
+    }
+    else
+    {
+        printf("Error file did note open. errno = %d\n", errno);
+    }
+
+    if (fp)
+        fclose(fp);
+
+    checkCalc = 12345678 + shuntOffset0 + shuntOffset1 + shuntOffset0 * shuntOffset1;
+
+    if (checkCalc == checkValue)
+        printf("parameters.txt loaded and checkCalc verified\n");
+    else
+        printf("checkValue Error parameter.txt file error!\n");
+
+    if (count != 3 || (checkCalc != checkValue))
+    {
+        shuntOffset0 = 0;
+        shuntOffset1 = 0;
+        checkValue = 0;
+    }
+
+    // sscanf(test, ".*shunt1:%d", &b);
+
+    printf("shuntOffset0= %d\n", shuntOffset0);
+    printf("shuntOffset1= %d\n", shuntOffset1);
+    printf("checkValue= %d\n", checkValue);
+
+    // err(EXIT_FAILURE,NULL);
 
     struct sockaddr_in dest_addr;
     int ip_protocol = 0;
@@ -119,8 +168,7 @@ void startHttpServer()
     dest_addr_ip4->sin_family = AF_INET;                // IPV4
     dest_addr_ip4->sin_port = htons(HTTPSERVER_PORT);   // Listen Port
 
-
-    ip_protocol = IPPROTO_IP;                           // IP
+    ip_protocol = IPPROTO_IP; // IP
 
     while (1)
     {
@@ -130,7 +178,7 @@ void startHttpServer()
         if (listen_sock < 0)
         {
             ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
-            //vTaskDelete(NULL);
+            // vTaskDelete(NULL);
             return;
         }
 
@@ -153,7 +201,7 @@ void startHttpServer()
         char messageBody[500];
         bool keepAlive = false;
         struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
-        
+
         uint32_t addr_len = sizeof(source_addr);
         int sock;
         struct timeval to;
@@ -193,7 +241,7 @@ void startHttpServer()
 
                 ESP_LOGI(TAG, "Socket accepted ip address: %u.%u.%u.%u, port: %d", addr & 0x0ff, (0x0ff00 & addr) >> 8, (0x0ff0000 & addr) >> 16, addr >> 24, port);
             }
-            //do_retransmit(sock);
+            // do_retransmit(sock);
             char lastBytes[4];
             char headerLine[100];
             int headerLineIndex = 0;
@@ -214,9 +262,10 @@ void startHttpServer()
             while (1)
             {
                 int len;
-                //len = recv(sock, &messageIn, sizeof(messageIn)-1, 0);
+                // len = recv(sock, &messageIn, sizeof(messageIn)-1, 0);
                 len = recv(sock, &messageIn, 1, 0);
-                //gpio_set_level(2, 1);
+
+                // gpio_set_level(2, 1);
 
                 if (len < 0)
                 {
@@ -241,24 +290,23 @@ void startHttpServer()
 
                         if (lastBytes[3] == 'G' && lastBytes[2] == 'E' && lastBytes[1] == 'T' && lastBytes[0] == ' ' && headerLineIndex == 5)
                         {
-                            //printf("Get Token next\n");
+                            // printf("Get Token next\n");
                             requestLine = true;
                             getReq = true;
                         }
                         if (lastBytes[3] == 'P' && lastBytes[2] == 'U' && lastBytes[1] == 'T' && lastBytes[0] == ' ' && headerLineIndex == 5)
                         {
-                            //printf("Put Token next\n");
+                            // printf("Put Token next\n");
 
                             putLine = true;
                             putReq = true;
                         }
 
-                       if (lastBytes[3] == 'O' && lastBytes[2] == 'P' && lastBytes[1] == 'T' && lastBytes[0] == 'I' && headerLineIndex == 5)
+                        if (lastBytes[3] == 'O' && lastBytes[2] == 'P' && lastBytes[1] == 'T' && lastBytes[0] == 'I' && headerLineIndex == 5)
                         {
-                            
+
                             optionReq = true;
                         }
-
 
                         // Content-Length header line
                         if (lastBytes[3] == 'C' && lastBytes[2] == 'o' && lastBytes[1] == 'n' && lastBytes[0] == 't' && headerLineIndex == 5 && putReq)
@@ -270,7 +318,7 @@ void startHttpServer()
                         if ((messageIn[0] == '\r') && (requestLine == true || putLine == true))
                         {
                             headerLine[headerLineIndex] = 0;
-                            //printf("\n\nheaderLine ->%s\n\n", headerLine);
+                            // printf("\n\nheaderLine ->%s\n\n", headerLine);
                             char *start;
                             char *end;
                             start = strstr(headerLine, "/");
@@ -289,7 +337,7 @@ void startHttpServer()
 
                                 printf("URL ->\"%s\" filename=%s\n", url, filename);
                             }
-                            //printf("\n\nheaderLine %p start %p end %p \n\n", headerLine, start, end);
+                            // printf("\n\nheaderLine %p start %p end %p \n\n", headerLine, start, end);
 
                             requestLine = false;
                             putLine = false;
@@ -317,12 +365,12 @@ void startHttpServer()
                         lastBytes[0] = messageIn[0];
 
                         messageIn[len] = 0;
-                        //printf("%s", messageIn);
+                        // printf("%s", messageIn);
 
                         if (lastBytes[3] == '\r' && lastBytes[2] == '\n' && lastBytes[1] == '\r' && lastBytes[0] == '\n' && httpHeader)
                         {
                             httpHeader = false;
-                            //printf("--- End of Request Headers--- \n");
+                            // printf("--- End of Request Headers--- \n");
                             int bytes;
 
                             if (getReq)
@@ -359,7 +407,8 @@ void startHttpServer()
                                         gpio35Target = adcTarget;
                                     }
 
-                                    if (shunt0TargetIn > -1000) {
+                                    if (shunt0TargetIn > -1000)
+                                    {
                                         shunt0Target = shunt0TargetIn;
                                     }
 
@@ -408,24 +457,23 @@ void startHttpServer()
                                                        " } ";
 
                                     bytesJson = snprintf(messageBody, sizeof(messageBody), json,
-                                                         ts, 
+                                                         ts,
                                                          stationIPAddr,
                                                          *stationRSSI,
-                                                         altCnt, 
-                                                         status, 
-                                                         gpio35Val, 
-                                                         gpio35ValMin, 
-                                                         gpio35ValMax, 
-                                                         state, 
-                                                         pwm1, 
+                                                         altCnt,
+                                                         status,
+                                                         gpio35Val,
+                                                         gpio35ValMin,
+                                                         gpio35ValMax,
+                                                         state,
+                                                         pwm1,
                                                          shunt0Target, shunt0_data.currentSample, shunt0_data.sampleCnt, shunt0_data.sampleSum, shunt0_data.minValue, shunt0_data.maxValue,
                                                          shunt1_data.currentSample);
 
-
                                     shunt0_data.sampleCnt = 0;
                                     shunt0_data.sampleSum = 0;
-                                    shunt0_data.maxValue  = INT32_MIN;
-                                    shunt0_data.minValue  = INT32_MAX;
+                                    shunt0_data.maxValue = INT32_MIN;
+                                    shunt0_data.minValue = INT32_MAX;
 
                                     bytes = snprintf(messageIn, sizeof(messageIn), "HTTP/1.1 200 OK\r\n");
                                     send(sock, messageIn, bytes, 0);
@@ -445,7 +493,7 @@ void startHttpServer()
                                     gpio35ValMax = 0;
 
                                     send(sock, messageBody, bytesJson, 0);
-                                    //send(sock, "                                                                                                                          ", contentLength - bytesJson, 0);
+                                    // send(sock, "                                                                                                                          ", contentLength - bytesJson, 0);
                                     break;
                                 }
                                 else
@@ -507,7 +555,7 @@ void startHttpServer()
                                         bytes = snprintf(messageIn, sizeof(messageIn), "\r\n");
                                         send(sock, messageIn, bytes, 0);
 
-                                        //bytes = snprintf(messageIn, sizeof(messageIn), "rick was here!");
+                                        // bytes = snprintf(messageIn, sizeof(messageIn), "rick was here!");
                                         while (1)
                                         {
                                             len = fread(messageIn, 1, sizeof(messageIn), fp);
@@ -538,17 +586,11 @@ void startHttpServer()
                                 bytes = snprintf(messageIn, sizeof(messageIn), "Content-Type: text/plain; charset=utf-8\r\n");
                                 send(sock, messageIn, bytes, 0);
 
-
- 
-
                                 bytes = snprintf(messageIn, sizeof(messageIn), "\r\n");
                                 send(sock, messageIn, bytes, 0);
- 
+
                                 bytes = snprintf(messageIn, sizeof(messageIn), "hello world!");
                                 send(sock, messageIn, bytes, 0);
-
-                               
-
 
                                 // Open for URL for writting
 
@@ -556,10 +598,11 @@ void startHttpServer()
                                 if (fp == NULL)
                                 {
                                     ESP_LOGE(TAG, "Failed to open %s\n", filename);
-                                    //return;
+                                    // return;
                                 }
                             }
-                            else if (optionReq) {
+                            else if (optionReq)
+                            {
                                 ESP_LOGI(TAG, "Option Req");
                                 bytes = snprintf(messageIn, sizeof(messageIn), "HTTP/1.1 200 OK\r\n");
                                 send(sock, messageIn, bytes, 0);
@@ -569,7 +612,7 @@ void startHttpServer()
                                 send(sock, messageIn, bytes, 0);
                                 bytes = snprintf(messageIn, sizeof(messageIn), "Access-Control-Max-Age: 86400\r\n");
                                 send(sock, messageIn, bytes, 0);
-                               
+
                                 bytes = snprintf(messageIn, sizeof(messageIn), "Content-Length: 0\r\n");
                                 send(sock, messageIn, bytes, 0);
                                 bytes = snprintf(messageIn, sizeof(messageIn), "Content-Type: text/plain; charset=utf-8\r\n");
@@ -577,14 +620,11 @@ void startHttpServer()
                                 bytes = snprintf(messageIn, sizeof(messageIn), "\r\n");
                                 send(sock, messageIn, bytes, 0);
 
-
- 
-
                                 bytes = snprintf(messageIn, sizeof(messageIn), "\r\n");
                                 send(sock, messageIn, bytes, 0);
-
                             }
-                            else {
+                            else
+                            {
                                 ESP_LOGW(TAG, "Not a PUT OR GET or OPTION!!");
                                 printf("Not a PUT OR GET!!");
                             }
@@ -593,12 +633,12 @@ void startHttpServer()
                     else // (!httpHeader)
                     {
                         printf("---");
-                        for (int i = 0; i<len; i++) {
+                        for (int i = 0; i < len; i++)
+                        {
                             printf("%c", messageIn[i]);
                         }
                         printf("---\n");
-                        
-                        
+
                         bodyLen += len;
                         if (fp)
                             fwrite(messageIn, 1, len, fp);
@@ -606,12 +646,12 @@ void startHttpServer()
                             break;
                     }
                 } // end of if Valid Data received from socket
-            }     //end of Rx while loop
+            }     // end of Rx while loop
             getReq = false;
             putReq = false;
 
-            //printf("BodyLen = %d\n", bodyLen);
-            //gpio_set_level(2, 0);
+            // printf("BodyLen = %d\n", bodyLen);
+            // gpio_set_level(2, 0);
             if (fp)
                 fclose(fp);
 
