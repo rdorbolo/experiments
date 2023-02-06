@@ -3,7 +3,8 @@
     "idf.port": "/dev/ttyUSB0",
     "files.associations": {
         "freertos.h": "c",
-        "*.ipp": "c"
+        "*.ipp": "c",
+        "random": "c"
     },
     "idf.flashType": "UART"
 }

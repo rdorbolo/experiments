@@ -22,9 +22,10 @@ export class slider2 {
         textAreaEl.innerHTML = text;
         touchLineEl.classList.add("touchLine");
 
-        const buttonTouchEl = document.createElement('div');
-        const buttonEchoEl = document.createElement('div');
-        const buttonValueEl = document.createElement('div');
+        const buttonTouchEl       = document.createElement('div');
+        const buttonEchoEl        = document.createElement('div');
+        const buttonValueEl       = document.createElement('div');
+        const buttonValueMinMaxEl = document.createElement('div');
 
         buttonTouchEl.classList.add("sliderTarget");
         buttonTouchEl.style.backgroundColor = "rgba(255,255,255,.4)";
@@ -38,12 +39,21 @@ export class slider2 {
         buttonValueEl.style.backgroundColor = "yellow";
         buttonValueEl.style.borderRadius = "100%";
 
+        buttonValueMinMaxEl.classList.add("sliderTarget");
+        buttonValueMinMaxEl.style.backgroundColor = "rgba(125,255,255,.4)";
+        buttonValueMinMaxEl.style.paddingLeft = "0"
+        buttonValueMinMaxEl.style.paddingRight = "0"
+        buttonValueMinMaxEl.style.width = "unset";
+
+
 
         if (!readOnly) {
             touchLineEl.appendChild(buttonEchoEl);
             touchLineEl.appendChild(buttonTouchEl);
         }
+        touchLineEl.appendChild(buttonValueMinMaxEl);
         touchLineEl.appendChild(buttonValueEl);
+
 
         sliderEl.appendChild(textAreaEl);
         sliderEl.appendChild(touchLineEl);
@@ -53,12 +63,13 @@ export class slider2 {
 
         const bodyEl = document.getElementsByTagName("body")[0];
 
-        sliderEl.text = text;
-        sliderEl.textAreaEl = textAreaEl;
-        sliderEl.buttonTouchEl = buttonTouchEl;
-        sliderEl.touchLineEl = touchLineEl;
-        sliderEl.buttonEchoEl = buttonEchoEl;
-        sliderEl.buttonValueEl = buttonValueEl;
+        sliderEl.text                = text;
+        sliderEl.textAreaEl          = textAreaEl;
+        sliderEl.buttonTouchEl       = buttonTouchEl;
+        sliderEl.touchLineEl         = touchLineEl;
+        sliderEl.buttonEchoEl        = buttonEchoEl;
+        sliderEl.buttonValueEl       = buttonValueEl;
+        sliderEl.buttonValueMinMaxEl = buttonValueMinMaxEl
 
         sliderEl.startx;
         sliderEl.touchX = 0;
@@ -71,6 +82,8 @@ export class slider2 {
         sliderEl.percentValue = 0;
         sliderEl.max = max;
         sliderEl.min = min;
+        sliderEl.valueMax = 10;
+        sliderEl.valueMin = 20;
 
 
         Object.defineProperty(this, "valueEcho", {
@@ -97,8 +110,25 @@ export class slider2 {
 
                 //var percentEcho = (v - sliderEl.min)/(sliderEl.max - sliderEl.min);
                 sliderEl.percentValue = (v - sliderEl.min) / (sliderEl.max - sliderEl.min);
-                console.log("the value is " + v + " percentEcho:" + sliderEl.percentValue);
+                //console.log("the value is " + v + " percentEcho:" + sliderEl.percentValue);
                 updateValues(sliderEl);
+            }
+        });
+
+
+        //testSlider3.valueMin
+
+        Object.defineProperty(this, "valueMin",{
+            set: function (v) {
+                sliderEl.valueMin = v;
+                sliderEl.buttonValueMinMaxEl.style.left = "" +  100*(v - sliderEl.min) / (sliderEl.max - sliderEl.min) + "%";
+            }
+        });
+
+        Object.defineProperty(this, "valueMax",{
+            set: function (v) {
+                sliderEl.valueMax = v;
+                sliderEl.buttonValueMinMaxEl.style.right = "" + ( 100  -  100*(v - sliderEl.min) / (sliderEl.max - sliderEl.min) )+ "%";
             }
         });
 
@@ -107,7 +137,7 @@ export class slider2 {
 
             if (readOnly) sliderEl.textAreaEl.innerHTML = sliderEl.text + " Value:" + sliderEl.value + " (" + Date.now() + ")";
             else {
-                sliderEl.textAreaEl.innerHTML = sliderEl.text + " Out:" + sliderEl.valueOut + " Echo: " + sliderEl.valueEcho + " Value:" + sliderEl.value + " (" + Date.now() + ")";
+                sliderEl.textAreaEl.innerHTML = sliderEl.text + " Value:" + sliderEl.value  + " Out:" + sliderEl.valueOut + " Echo: " + sliderEl.valueEcho +  " (" + Date.now() + ")";
             }
         }
         this.updateText = sliderEl.updateText;
@@ -118,9 +148,9 @@ export class slider2 {
             //console.log("me.max: " + me.max +" percent :" + me.percent + " value : " + me.valueOut)
 
             //me.textAreaEl.innerHTML = me.text + " " + Math.round(me.value);
-            me.buttonTouchEl.style.left = "" + 100 * (me.percent - me.buttonTouchEl.getBoundingClientRect().width / 2 / me.touchLineEl.clientWidth) + "%";
-            me.buttonEchoEl.style.left = "" + 100 * (me.percentEcho - me.buttonTouchEl.getBoundingClientRect().width / 2 / me.touchLineEl.clientWidth) + "%";
-            me.buttonValueEl.style.left = "" + 100 * (me.percentValue - me.buttonTouchEl.getBoundingClientRect().width / 2 / me.touchLineEl.clientWidth) + "%";
+            me.buttonTouchEl.style.left = "" + 100 * (me.percent      - me.buttonTouchEl.getBoundingClientRect().width / 2 / me.touchLineEl.clientWidth) + "%";
+            me.buttonEchoEl.style.left  = "" + 100 * (me.percentEcho  - me.buttonEchoEl.getBoundingClientRect().width / 2 / me.touchLineEl.clientWidth) + "%";
+            me.buttonValueEl.style.left = "" + 100 * (me.percentValue - me.buttonValueEl.getBoundingClientRect().width / 2 / me.touchLineEl.clientWidth) + "%";
 
         }
 

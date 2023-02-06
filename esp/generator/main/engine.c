@@ -41,6 +41,11 @@ uint altCnt = 0;     // NOLINT
 uint altCntLast = 0; // NOLINT
 uint timerCnt = 0;   // NOLINT
 
+// Calibration data to offset opamp error stored in parameters.txt
+ int32_t shuntOffset0;
+// Calibration data to offset opamp error stored in parameters.txt
+ int32_t shuntOffset1;
+
 int gpio35Val;
 int gpio35ValMin = 10000000;
 int gpio35ValAvg = 10000000;
@@ -308,6 +313,8 @@ static void example_tg0_timer_init(int timer_idx,
     // timer_start(TIMER_GROUP_0, timer_idx);
 }
 
+
+// Save ADC data into sample structure, calc min and max values
 void logSample(Stat_t *shunt_data, int16_t data)
 {
     shunt_data->currentSample = (int32_t)data;
@@ -382,10 +389,10 @@ void getAmps(void *parameters)
         int16_t data;
         data = ((int16_t)dataH << 8) | ((uint16_t)dataL);
         if (count % 2 == 0)
-            logSample(&shunt1_data, -data);
+            logSample(&shunt1_data, -data - (int16_t)shuntOffset1);
         // shunt1_data.currentSample = -data;
         else
-            logSample(&shunt0_data, -data);
+            logSample(&shunt0_data, -data - (int16_t)shuntOffset0);
 
         if (ret == ESP_OK)
         {
@@ -587,6 +594,11 @@ void startTach()
         .scl_pullup_en = GPIO_PULLUP_ENABLE,
         .master.clk_speed = i2c_frequency};
     i2c_param_config(i2c_port, &conf);
+
+
+    // Get Parameters from file
+
+
 
     xTaskCreate(getVolts, "getVolts", 2048, NULL, 5, NULL);
 
