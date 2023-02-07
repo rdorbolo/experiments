@@ -758,7 +758,7 @@ void app_main(void)
 
     newMessage(&messageClientOut, chipid);
 
-    printf("%02x:%02x:%02x:%02x:%02x:%02x\n", chipid[0], chipid[1], chipid[2], chipid[3], chipid[4], chipid[5]);
+    printf("chip id: %02x:%02x:%02x:%02x:%02x:%02x\n", chipid[0], chipid[1], chipid[2], chipid[3], chipid[4], chipid[5]);
     //3c:61:05:0c:8b:01
     //if (chipid[2] == 0x05 && chipid[3] == 0x0c && chipid[4] == 0x8b && chipid[5] == 0x01)  // cOM7
 
