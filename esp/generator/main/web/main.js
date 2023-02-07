@@ -162,7 +162,7 @@ statusEl.appendChild(debugEl);
 var updateNow = false;
 var updateButtonEl = document.createElement("input");
 updateButtonEl.setAttribute("type", "button");
-updateButtonEl.setAttribute("value", "Update");
+updateButtonEl.setAttribute("value", "Update (not implemented)");
 
 updateButtonEl.onclick = () => { console.log("click"); updateNow = true; }
 
