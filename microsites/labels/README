@@ -2,7 +2,7 @@
 Need set the IPs allowed by the key for the spreadsheets
 
 You need to use this to add the IP Address(es) of the websever(s) of the. When is IP Address of the server changes. Or to test anything
-or else you will get a 404 error or 403 error (not sure)
+or else you error 403 error (permission denied)
 
 https://console.developers.google.com/apis/credentials/key/3f0f3572-7cca-4151-858e-73f1189bd3d4?project=zuboludesigns-hrd&folder&organizationId
 
