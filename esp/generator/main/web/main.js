@@ -12,6 +12,7 @@ var firstLoad = true;
 var engineState = -1;
 var newState = 0;
 var nextState = 0;
+const DEBUGCOUNT = 60;
 
 
 var bodyEl = document.getElementsByTagName("body")[0];
@@ -149,8 +150,14 @@ statusEl.appendChild(testSlider3.el);
 
 
 
+var debugIpLableEl = document.createElement("div");
+debugIpLableEl.id = "debugIpLableEl";
+debugIpLableEl.innerHTML = "Enter IP Address of the ESP-32";
+statusEl.appendChild(debugIpLableEl);
 
 var debugIpAddrEl = document.createElement("input");
+debugIpAddrEl.id = "debugIpAddrEl";
+debugIpAddrEl.style.marginLeft = "10%";
 statusEl.appendChild(debugIpAddrEl);
 debugIpAddrEl.oninput = (e) => { e.stopPropagation(); console.log("ip input"); localStorage.setItem('debugIpAddr', debugIpAddrEl.value); }
 if (localStorage.getItem('debugIpAddr')) debugIpAddrEl.value = localStorage.getItem('debugIpAddr');
@@ -162,7 +169,7 @@ statusEl.appendChild(debugEl);
 var updateNow = false;
 var updateButtonEl = document.createElement("input");
 updateButtonEl.setAttribute("type", "button");
-updateButtonEl.setAttribute("value", "Update (not implemented)");
+updateButtonEl.setAttribute("value", "Update Calibration Constants (not implemented)");
 
 updateButtonEl.onclick = () => { console.log("click"); updateNow = true; }
 
@@ -450,14 +457,14 @@ function onclickButton(event) {
 var lastAnimationTime = 0;
 var interval = 500;// ms
 var requestTime = 0;
-var debugCount = 5;
+var debugCount = DEBUGCOUNT;
 function animator(timeStamp) {
     debugEl.innerHTML = "debugCount: " + debugCount;
 
     window.readyForData = readyForData;
     window.updateNow    = updateNow;
 
-    if (event) debugCount = 5;
+    if (event) debugCount = DEBUGCOUNT;
 
     if (updateNow && readyForData) {
         updateNow    = false;
