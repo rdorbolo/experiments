@@ -29,7 +29,7 @@ static const gpio_num_t i2c_gpio_scl = 19;
 static const uint32_t i2c_frequency = 1000000;
 static const i2c_port_t i2c_port = I2C_NUM_0;
 
-static const char TAG[] = "engine.c";
+static const char TAG[] = "engine.c";// NOLINT
 
 char *STATUS_IDLE = "idle";                      // NOLINT
 char *STATUS_VOLTS_HIGH = "vHigh";               // NOLINT
@@ -40,6 +40,7 @@ char *STATUS_ADJUSTING = "adjusting";            // NOLINT
 uint altCnt = 0;     // NOLINT
 uint altCntLast = 0; // NOLINT
 uint timerCnt = 0;   // NOLINT
+
 
 // Calibration data to offset opamp error stored in parameters.txt
  int32_t shuntOffset0;
@@ -71,6 +72,8 @@ int bufIndex = 0;
 bool avgStart = true;
 int samples = 0;
 int increasePower = 0;
+
+
 
 void getVolts(void *parameters)
 {
@@ -148,170 +151,163 @@ void intFunc(void *params)
 {
     gpio_intr_disable(ALT_GPIO_PIN);
     altCnt++;
-    // timer_set_counter_value(TIMER_GROUP_0,TIMER_0, 0x00000000ULL);
+    
     timer_start(TIMER_GROUP_0, TIMER_1);
-    // timer_enable_intr(TIMER_GROUP_0, TIMER_0);
+    
 }
 
-// bool timerHandle( void * params) {
-//     TIMERG0.int_clr_timers.t0 = 1;
+
+// void IRAM_ATTR timer_group0_isr1(void *para)
+// {
+//     timer_spinlock_take(TIMER_GROUP_0);
 //     timerCnt++;
-//     return false;
+//     uint32_t timer_intr = timer_group_get_intr_status_in_isr(TIMER_GROUP_0);
+
+//     /* Clear the interrupt
+//        and update the alarm time for the timer with without reload */
+//     // if (timer_intr & TIMER_INTR_T0) {
+//     //     evt.type = TEST_WITHOUT_RELOAD;
+//     timer_group_clr_intr_status_in_isr(TIMER_GROUP_0, TIMER_0);
+
+//     //    timer_counter_value += (uint64_t) (TIMER_INTERVAL0_SEC * TIMER_SCALE);
+//     //    timer_group_set_alarm_value_in_isr(TIMER_GROUP_0, timer_idx, timer_counter_value);
+//     //} else if (timer_intr & TIMER_INTR_T1) {
+//     //    evt.type = TEST_WITH_RELOAD;
+//     //   timer_group_clr_intr_status_in_isr(TIMER_GROUP_0, TIMER_1);
+//     //} else {
+//     //    evt.type = -1; // not supported even type
+//     //}
+
+//     /* After the alarm has been triggered
+//       we need enable it again, so it is triggered the next time */
+//     // timer_group_enable_alarm_in_isr(TIMER_GROUP_0, TIMER_0);
+//     TIMERG0.int_clr_timers.t0 = 1;
+//     timer_spinlock_give(TIMER_GROUP_0);
 // }
 
-void IRAM_ATTR timer_group0_isr1(void *para)
-{
-    timer_spinlock_take(TIMER_GROUP_0);
-    timerCnt++;
-    uint32_t timer_intr = timer_group_get_intr_status_in_isr(TIMER_GROUP_0);
+// #define TIMER_DIVIDER 16                             //  Hardware timer clock divider
+// #define TIMER_SCALE (TIMER_BASE_CLK / TIMER_DIVIDER) // convert counter value to seconds
+// #define TIMER_INTERVAL0_SEC (3.4179)                 // sample test interval for the first timer
+// #define TIMER_INTERVAL1_SEC (.001)                   // sample test interval for the second timer
+// #define TEST_WITHOUT_RELOAD 0                        // testing will be done without auto reload
+// #define TEST_WITH_RELOAD 1                           // testing will be done with auto reload
 
-    /* Clear the interrupt
-       and update the alarm time for the timer with without reload */
-    // if (timer_intr & TIMER_INTR_T0) {
-    //     evt.type = TEST_WITHOUT_RELOAD;
-    timer_group_clr_intr_status_in_isr(TIMER_GROUP_0, TIMER_0);
+// /*
+//  * A sample structure to pass events
+//  * from the timer interrupt handler to the main program.
+//  */
+// typedef struct
+// {
+//     int type; // the type of timer's event
+//     int timer_group;
+//     int timer_idx;
+//     uint64_t timer_counter_value;
+// } timer_event_t;
 
-    //    timer_counter_value += (uint64_t) (TIMER_INTERVAL0_SEC * TIMER_SCALE);
-    //    timer_group_set_alarm_value_in_isr(TIMER_GROUP_0, timer_idx, timer_counter_value);
-    //} else if (timer_intr & TIMER_INTR_T1) {
-    //    evt.type = TEST_WITH_RELOAD;
-    //   timer_group_clr_intr_status_in_isr(TIMER_GROUP_0, TIMER_1);
-    //} else {
-    //    evt.type = -1; // not supported even type
-    //}
+// /*
+//  * A simple helper function to print the raw timer counter value
+//  * and the counter value converted to seconds
+//  */
+// static void inline print_timer_counter(uint64_t counter_value)
+// {
+//     printf("Counter: 0x%08x%08x\n", (uint32_t)(counter_value >> 32),
+//            (uint32_t)(counter_value));
+//     printf("Time   : %.8f s\n", (double)counter_value / TIMER_SCALE);
+// }
 
-    /* After the alarm has been triggered
-      we need enable it again, so it is triggered the next time */
-    // timer_group_enable_alarm_in_isr(TIMER_GROUP_0, TIMER_0);
-    TIMERG0.int_clr_timers.t0 = 1;
-    timer_spinlock_give(TIMER_GROUP_0);
-}
+// /*
+//  * Timer group0 ISR handler
+//  *
+//  * Note:
+//  * We don't call the timer API here because they are not declared with IRAM_ATTR.
+//  * If we're okay with the timer irq not being serviced while SPI flash cache is disabled,
+//  * we can allocate this interrupt without the ESP_INTR_FLAG_IRAM flag and use the normal API.
+//  */
+// void IRAM_ATTR timer_group0_isr(void *para)
+// {
+//     timer_spinlock_take(TIMER_GROUP_0);
+//     timer_group_set_counter_enable_in_isr(TIMER_GROUP_0, TIMER_1, TIMER_PAUSE);
+//     int timer_idx = (int)para;
 
-#define TIMER_DIVIDER 16                             //  Hardware timer clock divider
-#define TIMER_SCALE (TIMER_BASE_CLK / TIMER_DIVIDER) // convert counter value to seconds
-#define TIMER_INTERVAL0_SEC (3.4179)                 // sample test interval for the first timer
-#define TIMER_INTERVAL1_SEC (.001)                   // sample test interval for the second timer
-#define TEST_WITHOUT_RELOAD 0                        // testing will be done without auto reload
-#define TEST_WITH_RELOAD 1                           // testing will be done with auto reload
+//     /* Retrieve the interrupt status and the counter value
+//        from the timer that reported the interrupt */
+//     uint32_t timer_intr = timer_group_get_intr_status_in_isr(TIMER_GROUP_0);
+//     uint64_t timer_counter_value = timer_group_get_counter_value_in_isr(TIMER_GROUP_0, timer_idx);
 
-/*
- * A sample structure to pass events
- * from the timer interrupt handler to the main program.
- */
-typedef struct
-{
-    int type; // the type of timer's event
-    int timer_group;
-    int timer_idx;
-    uint64_t timer_counter_value;
-} timer_event_t;
+//     /* Prepare basic event data
+//        that will be then sent back to the main program task */
+//     timer_event_t evt;
+//     evt.timer_group = 0;
+//     evt.timer_idx = timer_idx;
+//     evt.timer_counter_value = timer_counter_value;
 
-// xQueueHandle timer_queue;
+//     /* Clear the interrupt
+//        and update the alarm time for the timer with without reload */
+//     if (timer_intr & TIMER_INTR_T0)
+//     {
+//         evt.type = TEST_WITHOUT_RELOAD;
+//         timer_group_clr_intr_status_in_isr(TIMER_GROUP_0, TIMER_0);
+//         timer_counter_value += (uint64_t)(TIMER_INTERVAL0_SEC * TIMER_SCALE);
 
-/*
- * A simple helper function to print the raw timer counter value
- * and the counter value converted to seconds
- */
-static void inline print_timer_counter(uint64_t counter_value)
-{
-    printf("Counter: 0x%08x%08x\n", (uint32_t)(counter_value >> 32),
-           (uint32_t)(counter_value));
-    printf("Time   : %.8f s\n", (double)counter_value / TIMER_SCALE);
-}
+//         timer_group_set_alarm_value_in_isr(TIMER_GROUP_0, timer_idx, timer_counter_value);
+//     }
+//     else if (timer_intr & TIMER_INTR_T1)
+//     {
+//         evt.type = TEST_WITH_RELOAD;
+//         timer_group_clr_intr_status_in_isr(TIMER_GROUP_0, TIMER_1);
+//         // timer_group_set_counter_enable_in_isr(TIMER_GROUP_0, TIMER_1, TIMER_PAUSE);
+//         gpio_intr_enable(ALT_GPIO_PIN);
+//     }
+//     else
+//     {
+//         evt.type = -1; // not supported even type
+//     }
 
-/*
- * Timer group0 ISR handler
- *
- * Note:
- * We don't call the timer API here because they are not declared with IRAM_ATTR.
- * If we're okay with the timer irq not being serviced while SPI flash cache is disabled,
- * we can allocate this interrupt without the ESP_INTR_FLAG_IRAM flag and use the normal API.
- */
-void IRAM_ATTR timer_group0_isr(void *para)
-{
-    timer_spinlock_take(TIMER_GROUP_0);
-    timer_group_set_counter_enable_in_isr(TIMER_GROUP_0, TIMER_1, TIMER_PAUSE);
-    int timer_idx = (int)para;
+//     /* After the alarm has been triggered
+//       we need enable it again, so it is triggered the next time */
+//     timer_group_enable_alarm_in_isr(TIMER_GROUP_0, timer_idx);
 
-    /* Retrieve the interrupt status and the counter value
-       from the timer that reported the interrupt */
-    uint32_t timer_intr = timer_group_get_intr_status_in_isr(TIMER_GROUP_0);
-    uint64_t timer_counter_value = timer_group_get_counter_value_in_isr(TIMER_GROUP_0, timer_idx);
+//     /* Now just send the event data back to the main program task */
+//     timer_spinlock_give(TIMER_GROUP_0);
+// }
 
-    /* Prepare basic event data
-       that will be then sent back to the main program task */
-    timer_event_t evt;
-    evt.timer_group = 0;
-    evt.timer_idx = timer_idx;
-    evt.timer_counter_value = timer_counter_value;
 
-    /* Clear the interrupt
-       and update the alarm time for the timer with without reload */
-    if (timer_intr & TIMER_INTR_T0)
-    {
-        evt.type = TEST_WITHOUT_RELOAD;
-        timer_group_clr_intr_status_in_isr(TIMER_GROUP_0, TIMER_0);
-        timer_counter_value += (uint64_t)(TIMER_INTERVAL0_SEC * TIMER_SCALE);
+// /*
+//  * Initialize selected timer of the timer group 0
+//  *
+//  * timer_idx - the timer number to initialize
+//  * auto_reload - should the timer auto reload on alarm?
+//  * timer_interval_sec - the interval of alarm to set
+//  */
+// static void example_tg0_timer_init(int timer_idx,
+//                                    bool auto_reload, double timer_interval_sec)
+// {
+//     /* Select and initialize basic parameters of the timer */
+//     timer_config_t config = {
+//         .divider = TIMER_DIVIDER,
+//         .counter_dir = TIMER_COUNT_UP,
+//         .counter_en = TIMER_PAUSE,
+//         .alarm_en = TIMER_ALARM_EN,
+//         .auto_reload = auto_reload,
+//     }; // default clock source is APB
+//     timer_init(TIMER_GROUP_0, timer_idx, &config);
 
-        timer_group_set_alarm_value_in_isr(TIMER_GROUP_0, timer_idx, timer_counter_value);
-    }
-    else if (timer_intr & TIMER_INTR_T1)
-    {
-        evt.type = TEST_WITH_RELOAD;
-        timer_group_clr_intr_status_in_isr(TIMER_GROUP_0, TIMER_1);
-        // timer_group_set_counter_enable_in_isr(TIMER_GROUP_0, TIMER_1, TIMER_PAUSE);
-        gpio_intr_enable(ALT_GPIO_PIN);
-    }
-    else
-    {
-        evt.type = -1; // not supported even type
-    }
+//     /* Timer's counter will initially start from value below.
+//        Also, if auto_reload is set, this value will be automatically reload on alarm */
+//     timer_set_counter_value(TIMER_GROUP_0, timer_idx, 0x00000000ULL);
 
-    /* After the alarm has been triggered
-      we need enable it again, so it is triggered the next time */
-    timer_group_enable_alarm_in_isr(TIMER_GROUP_0, timer_idx);
+//     /* Configure the alarm value and the interrupt on alarm. */
+//     timer_set_alarm_value(TIMER_GROUP_0, timer_idx, timer_interval_sec * TIMER_SCALE);
 
-    /* Now just send the event data back to the main program task */
-    // xQueueSendFromISR(timer_queue, &evt, NULL);
-    timer_spinlock_give(TIMER_GROUP_0);
-}
+//     uint64_t alarm_value;
+//     timer_get_alarm_value(TIMER_GROUP_0, timer_idx, &alarm_value);
+//     printf("alarm value : %llu \n", alarm_value);
+//     timer_enable_intr(TIMER_GROUP_0, timer_idx);
+//     timer_isr_register(TIMER_GROUP_0, timer_idx, timer_group0_isr,
+//                        (void *)timer_idx, ESP_INTR_FLAG_IRAM, NULL);
 
-/*
- * Initialize selected timer of the timer group 0
- *
- * timer_idx - the timer number to initialize
- * auto_reload - should the timer auto reload on alarm?
- * timer_interval_sec - the interval of alarm to set
- */
-static void example_tg0_timer_init(int timer_idx,
-                                   bool auto_reload, double timer_interval_sec)
-{
-    /* Select and initialize basic parameters of the timer */
-    timer_config_t config = {
-        .divider = TIMER_DIVIDER,
-        .counter_dir = TIMER_COUNT_UP,
-        .counter_en = TIMER_PAUSE,
-        .alarm_en = TIMER_ALARM_EN,
-        .auto_reload = auto_reload,
-    }; // default clock source is APB
-    timer_init(TIMER_GROUP_0, timer_idx, &config);
-
-    /* Timer's counter will initially start from value below.
-       Also, if auto_reload is set, this value will be automatically reload on alarm */
-    timer_set_counter_value(TIMER_GROUP_0, timer_idx, 0x00000000ULL);
-
-    /* Configure the alarm value and the interrupt on alarm. */
-    timer_set_alarm_value(TIMER_GROUP_0, timer_idx, timer_interval_sec * TIMER_SCALE);
-
-    uint64_t alarm_value;
-    timer_get_alarm_value(TIMER_GROUP_0, timer_idx, &alarm_value);
-    printf("alarm value : %llu \n", alarm_value);
-    timer_enable_intr(TIMER_GROUP_0, timer_idx);
-    timer_isr_register(TIMER_GROUP_0, timer_idx, timer_group0_isr,
-                       (void *)timer_idx, ESP_INTR_FLAG_IRAM, NULL);
-
-    // timer_start(TIMER_GROUP_0, timer_idx);
-}
+   
+// }
 
 
 // Save ADC data into sample structure, calc min and max values
@@ -353,7 +349,7 @@ void getAmps(void *parameters)
 
         // Command is complete
         i2c_master_stop(cmd);
-        esp_err_t ret = i2c_master_cmd_begin(i2c_port, cmd, 1000 / portTICK_RATE_MS);
+        esp_err_t ret = i2c_master_cmd_begin(i2c_port, cmd, 1000 / portTICK_PERIOD_MS);
 
         i2c_cmd_link_delete(cmd);
         cmd = i2c_cmd_link_create();
@@ -384,7 +380,7 @@ void getAmps(void *parameters)
         i2c_master_stop(cmd);
 
         // Run Command sequence
-        ret = i2c_master_cmd_begin(i2c_port, cmd, 1000 / portTICK_RATE_MS);
+        ret = i2c_master_cmd_begin(i2c_port, cmd, 1000 / portTICK_PERIOD_MS);
 
         int16_t data;
         data = ((int16_t)dataH << 8) | ((uint16_t)dataL);
@@ -503,9 +499,7 @@ void updateLoop(void *parameters)
         ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
 
         count++;
-
         status = statusCalc; // Update the global status message now
-
         if (count % 12000 == 0)
         {
             int64_t t = esp_timer_get_time();
@@ -513,7 +507,7 @@ void updateLoop(void *parameters)
             int32_t deltaT = tt - lastTime;
             lastTime = tt;
 
-            printf("\n Engine.c: count= %d, tt=%d deltaTime=%d %s\n", count, tt, deltaT, time_status);
+            printf("\n Engine.c: count= %d, tt=%d deltaTime=%d %s\n", count, (int)tt, (int)deltaT, time_status);
         }
     }
 }
@@ -535,20 +529,8 @@ void startTach()
     int altGpioPin = ALT_GPIO_PIN;
     gpio_isr_register(intFunc, (void *)(&altGpioPin), ESP_INTR_FLAG_LEVEL2, NULL);
 
-    // timer_queue = xQueueCreate(10, sizeof(timer_event_t));
-    // example_tg0_timer_init(TIMER_0, TEST_WITHOUT_RELOAD, TIMER_INTERVAL0_SEC);
-    example_tg0_timer_init(TIMER_1, TEST_WITH_RELOAD, TIMER_INTERVAL1_SEC);
 
-    /*
-    gpio_config_t pwmIgnition;
-    pwmIgnition.intr_type = GPIO_INTR_DISABLE;
-    pwmIgnition.mode = GPIO_MODE_OUTPUT;
-    pwmIgnition.pin_bit_mask = ((uint64_t)1)  << 2;
-    pwmIgnition.pull_up_en   = 0x0;
-    pwmIgnition.pull_down_en = 0x0;
-    gpio_config(&pwmIgnition);
-    gpio_set_level(2, 0);
-    */
+   // example_tg0_timer_init(TIMER_1, TEST_WITH_RELOAD, TIMER_INTERVAL1_SEC);
 
     ledc_channel_config_t ledc_conf;
 

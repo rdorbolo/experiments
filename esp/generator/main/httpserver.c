@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "esp_log.h"
 #include "esp_timer.h"
+#include "esp_mac.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_intr_alloc.h"
@@ -128,7 +129,10 @@ void startHttpServer()
     if (fp != NULL)
     {
 
-        count = fscanf(fp, "shuntOffset0:%d, shuntOffset1:%d, checkValue:%d", &shuntOffset0, &shuntOffset1, &checkValue);
+        int t0, t1; // temp vars used to deal with type conversion warning
+        count = fscanf(fp, "shuntOffset0:%d, shuntOffset1:%d, checkValue:%d", &t0, &t1, &checkValue);
+        shuntOffset0 = t0;
+        shuntOffset1 = t1;
     }
     else
     {
@@ -154,8 +158,8 @@ void startHttpServer()
 
     // sscanf(test, ".*shunt1:%d", &b);
 
-    printf("shuntOffset0= %d\n", shuntOffset0);
-    printf("shuntOffset1= %d\n", shuntOffset1);
+    printf("shuntOffset0= %d\n", (int)shuntOffset0);
+    printf("shuntOffset1= %d\n", (int)shuntOffset1);
     printf("checkValue= %d\n", checkValue);
 
     // err(EXIT_FAILURE,NULL);
@@ -220,12 +224,12 @@ void startHttpServer()
             else
             {
                 listen_sock_count++;
-                ESP_LOGI(TAG, "Socket listening, listen_sock_count = %d", listen_sock_count);
+                ESP_LOGI(TAG, "Socket listening, listen_sock_count = %d", (int)listen_sock_count);
 
                 sock = accept(listen_sock, (struct sockaddr *)&source_addr, &addr_len);
                 if (sock < 0)
                 {
-                    ESP_LOGE(TAG, "Unable to accept connection: errno %d", errno);
+                    ESP_LOGE(TAG, "Unable to accept connection: errno %d", (int)errno);
                     break;
                 }
 
@@ -239,7 +243,7 @@ void startHttpServer()
                 port = ((struct sockaddr_in *)&source_addr)->sin_port;
                 addr = ((struct sockaddr_in *)&source_addr)->sin_addr.s_addr;
 
-                ESP_LOGI(TAG, "Socket accepted ip address: %u.%u.%u.%u, port: %d", addr & 0x0ff, (0x0ff00 & addr) >> 8, (0x0ff0000 & addr) >> 16, addr >> 24, port);
+                ESP_LOGI(TAG, "Socket accepted ip address: %u.%u.%u.%u, port: %d", (unsigned int)(addr & 0x0ff), (unsigned int)((0x0ff00 & addr)>> 8),  (unsigned int)((0x0ff0000 & addr)) >> 16,  (unsigned int)(addr >> 24), (int)port);
             }
             // do_retransmit(sock);
             char lastBytes[4];
@@ -269,7 +273,7 @@ void startHttpServer()
 
                 if (len < 0)
                 {
-                    ESP_LOGE(TAG, "Error occurred during receiving: errno %d, httpHeader %d", errno, httpHeader);
+                    ESP_LOGE(TAG, "Error occurred during receiving: errno %d, httpHeader %d", (int)errno, (int)httpHeader);
                     break;
                 }
                 else if (len == 0)

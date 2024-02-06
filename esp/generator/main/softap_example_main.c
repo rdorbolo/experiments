@@ -9,9 +9,11 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_mac.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
+#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 #include "nvs_flash.h"
 
@@ -59,7 +61,7 @@ typedef struct networkStatus
 } networkStatus_t;
 
 networkStatus_t networkStatus = {
-    .internetSSID = "DNET Fast",
+    .internetSSID = "dnet",
     .internetPassword = "andrewhooban92126",
     .gridSSID = "grid",
     .internetRSSI = -999,
@@ -211,7 +213,7 @@ static void tcp_server_task(void *pvParameters)
         ESP_LOGI(TAG, "Socket listening");
 
         struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
-        uint addr_len = sizeof(source_addr);
+        socklen_t addr_len = (socklen_t)sizeof(source_addr);
         int sock = accept(listen_sock, (struct sockaddr *)&source_addr, &addr_len);
         if (sock < 0)
         {
@@ -419,7 +421,7 @@ static void tcp_client_task(void *pvParameters)
 
                 esp_netif_get_ip_info(netif_sta, &ip_info);
 
-                ESP_LOGI(TAG, "ssid = %s gw: %x", apInfo.ssid, ip_info.gw.addr);
+                ESP_LOGI(TAG, "ssid = %s gw: %x", apInfo.ssid, (unsigned int)ip_info.gw.addr);
 
                 break;
             }
@@ -676,12 +678,12 @@ void stationScanner(void *params)
                     ip1 = (0x00ff0000 & ip_info.gw.addr) >> 16;
                     ip2 = (0x0000ff00 & ip_info.gw.addr) >> 8;
                     ip3 = (0x000000ff & ip_info.gw.addr);
-                    printf("Root Station connection is valid. SSID = %s gw: %x\n", apInfo.ssid, ip_info.gw.addr);
+                    printf("Root Station connection is valid. SSID = %s gw: %x\n", apInfo.ssid, (unsigned int)ip_info.gw.addr);
                     printf("Root Station connection is valid. SSID = %s gw: %d.%d.%d.%d\n", apInfo.ssid, ip3, ip2, ip1, ip0);
                     toIpString(ip_info.ip.addr);
                     strncpy(stationIPAddr,ipString, sizeof(stationIPAddr));
                     printf("This node's ip address from station %s is ip_info.ip.addr : 0x%x (%s) \n",
-                           apInfo.ssid, ip_info.ip.addr,stationIPAddr);
+                           apInfo.ssid, (unsigned int)ip_info.ip.addr,stationIPAddr);
                 }
                 else
                 {
@@ -697,7 +699,7 @@ void stationScanner(void *params)
                 {
                     connectedToCorrectStation = true;
                     esp_netif_get_ip_info(netif_sta, &ip_info);
-                    printf("Non Root Station connection is valid. SSID = %s gw: %x\n", apInfo.ssid, ip_info.gw.addr);
+                    printf("Non Root Station connection is valid. SSID = %s gw: %x\n", apInfo.ssid, (unsigned int)ip_info.gw.addr);
                 }
                 else
                 {
@@ -731,7 +733,7 @@ void stationScanner(void *params)
                 else {
                     printf("Station is connected to %s\n", networkStatus.internetSSID);
                     esp_netif_get_ip_info(netif_sta, &ip_info);
-                    ESP_LOGI(TAG, "station ssid = %s gw: %x", apInfo.ssid, ip_info.gw.addr);
+                    ESP_LOGI(TAG, "station ssid = %s gw: %x", apInfo.ssid, (unsigned int)ip_info.gw.addr);
 
                 }
             }
@@ -790,3 +792,5 @@ void app_main(void)
 
     startHttpServer();
 }
+
+// end 1

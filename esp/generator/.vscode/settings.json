@@ -4,7 +4,8 @@
     "files.associations": {
         "freertos.h": "c",
         "*.ipp": "c",
-        "random": "c"
+        "random": "c",
+        "err.h": "c"
     },
     "idf.flashType": "UART"
 }
