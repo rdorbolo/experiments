@@ -214,7 +214,7 @@ void startHttpServer()
         u32_t listen_sock_count = 0;
         while (1)
         {
-            if (busyCnt < 3)
+            if (busyCnt < 5)
                 busyCnt++;
 
             if (keepAlive)
