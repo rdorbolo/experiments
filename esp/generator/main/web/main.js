@@ -174,7 +174,12 @@ var pollingButtonEl = document.createElement("div");
 pollingButtonEl.id = "pollingButtonEl";
 pollingButtonEl.innerHTML = "Stop Polling";
 pollingButtonEl.style.background = "grey";
-pollingButtonEl.style.marginLeft = "10%"
+pollingButtonEl.style.marginLeft   = "10%"
+pollingButtonEl.style.marginTop    = ".3rem"
+pollingButtonEl.style.marginBottom = ".3rem"
+pollingButtonEl.style.outline      = "1px solid black"
+
+
 pollingButtonEl.style.width      = "10rem"
 pollingButtonEl.style.textAlign  = "center";
 pollingButtonEl.style.cursor     = "pointer";
