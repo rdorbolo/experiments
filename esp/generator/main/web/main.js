@@ -12,7 +12,7 @@ var firstLoad = true;
 var engineState = -1;
 var newState = 0;
 var nextState = 0;
-const DEBUGCOUNT = 60;
+var resetCount = 600000;
 
 
 var bodyEl = document.getElementsByTagName("body")[0];
@@ -164,6 +164,42 @@ if (localStorage.getItem('debugIpAddr')) debugIpAddrEl.value = localStorage.getI
 
 var debugEl = document.createElement("div");
 statusEl.appendChild(debugEl);
+
+
+var pollingLablelEl = document.createElement("div");
+pollingLablelEl.id = "pollingLabelEl";
+pollingLablelEl.innerHTML = "Click to Start/Stop Polling";
+
+var pollingButtonEl = document.createElement("div");
+pollingButtonEl.id = "pollingButtonEl";
+pollingButtonEl.innerHTML = "Stop Polling";
+pollingButtonEl.style.background = "grey";
+pollingButtonEl.style.marginLeft = "10%"
+pollingButtonEl.style.width      = "10rem"
+pollingButtonEl.style.textAlign  = "center";
+pollingButtonEl.style.cursor     = "pointer";
+pollingButtonEl.onclick    = (e) => {
+    e.preventDefault();
+    if (pollingButtonEl.innerHTML == "Stop Polling") {
+        pollingButtonEl.innerHTML = "Start Polling";
+        resetCount = 2;
+        debugCount = 2;
+
+    }
+    else {
+        pollingButtonEl.innerHTML = "Stop Polling";
+        resetCount = 100000;
+        debugCount = 100000;
+
+    }
+
+    
+    console.log("click");
+}
+
+statusEl.appendChild(pollingLablelEl);
+statusEl.appendChild(pollingButtonEl);
+
 
 
 var updateNow = false;
@@ -457,14 +493,14 @@ function onclickButton(event) {
 var lastAnimationTime = 0;
 var interval = 500;// ms
 var requestTime = 0;
-var debugCount = DEBUGCOUNT;
+var debugCount = resetCount;
 function animator(timeStamp) {
     debugEl.innerHTML = "debugCount: " + debugCount;
 
     window.readyForData = readyForData;
     window.updateNow    = updateNow;
 
-    if (event) debugCount = DEBUGCOUNT;
+    if (event) debugCount = resetCount;
 
     if (updateNow && readyForData) {
         updateNow    = false;
