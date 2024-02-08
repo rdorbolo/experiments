@@ -1,0 +1,12 @@
+how to use usb-ip
+
+https://learn.microsoft.com/en-us/windows/wsl/connect-usb#attach-a-usb-device
+
+as admin run
+ usbipd bind -b 6-1
+ usbipd attach --busid 6-1 --wsl ubuntu
+
+
+usbipd bind --hardware-id 10c4:ea60
+usbipd attach --hardware-id  10c4:ea60 --wsl ubuntu
+
