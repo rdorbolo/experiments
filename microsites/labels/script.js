@@ -12,6 +12,7 @@ var HEIGHT      = 7;
 var WIDTH       = 8;
 var WATER       = 9;
 var BLOOM_INFO  = 10;
+var UNDERLINE   = 24;
 
 var body = document.getElementsByTagName("body")[0];
 
@@ -29,7 +30,7 @@ var body = document.getElementsByTagName("body")[0];
 
 const defaultDocId = '1nFHWrJCpSuChvmC85ys8Ov92j2dvZqQVW9-k-QqBMxc';
 var docId;// = '1nFHWrJCpSuChvmC85ys8Ov92j2dvZqQVW9-k-QqBMxc'
-let sheetname = "2023"
+let sheetname = "2024"
 var b;
 var spreadsheet;
 var labels  = 0;
@@ -42,6 +43,7 @@ var docIdDiv;
 var docIdEditDiv;
 var docTitleDiv;
 
+var debug = "rick";
 
 docId = localStorage.getItem("docId");
 if (docId == null) docId = defaultDocId;
@@ -105,7 +107,10 @@ function sget(row, index, theClass) {
 	return div;
 }
 function sget2(row, index, theClass) {
-	var text = row[index].trim();
+	var cell = row[index];
+	var text;
+	if (cell) text = row[index].trim();
+	else      text = "";
 	if (text.length == 0) return null;
 
 	return text;
@@ -127,7 +132,7 @@ function createDoc() {
     	for (var j =0; j<tags_reqd; j++) {
 
 			labels++;
-    		//console.log(row);
+    		//if (j<4) console.log(row);
 			var group      = sget(row, GROUP, "group");
 			var commonName = sget2(row, COMMON_NAME, "commonName");
 			var variety    = sget2(row, VARIETY, "variety");
@@ -137,6 +142,25 @@ function createDoc() {
 			var width      = sget2(row, WIDTH, "width");
 			var water      = sget2(row, WATER, "water");
 			var bloomInfo  = sget2(row, BLOOM_INFO, "bloomInfo");
+			var underline  = sget2(row, UNDERLINE, "underline");
+
+			if (underline) console.log(underline);
+			// modify the commonName if one of the words is the underline word
+			var commonArray = commonName.split(' ');
+			console.log(commonName);
+			console.log(commonArray);
+			if (underline) {
+				commonName = "";
+				commonArray.forEach(element => {
+					debug = element;
+					console.log("currentElement=" + element);
+					if (element.toLowerCase() == underline.toLowerCase()) element = '<span style="text-decoration: underline">' + element + "</span>"
+					commonName += element + " ";
+				});
+			}
+
+	
+
 
 			var div = document.createElement("DIV");
 			div.classList.add("label");
