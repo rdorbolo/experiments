@@ -5,7 +5,9 @@
         "freertos.h": "c",
         "*.ipp": "c",
         "random": "c",
-        "err.h": "c"
+        "err.h": "c",
+        "queue.h": "c"
     },
-    "idf.flashType": "UART"
+    "idf.flashType": "UART",
+    "C_Cpp.default.compilerPath": ""
 }

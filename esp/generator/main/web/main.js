@@ -260,7 +260,8 @@ xmlhttp.onreadystatechange = function () {
         altCntEl.innerText = "AltCnt: " + dataObj.altCnt;
         pwm1El.innerText = "Pwm1:" + dataObj.pwm1;
         chargeStatusEl.innerText = "Status: " + dataObj.status;
-        gpio35ValEl.innerText = "Battery Voltage (gpio35Val)  " + dataObj.gpio35Val + " = " + (12.6 / 620 * dataObj.gpio35Val).toFixed(1) + "v";
+        gpio35ValEl.innerText = "Battery Voltage (gpio35Val)  " + 
+        dataObj.gpio35ValMin +  "/" +dataObj.gpio35Val + "/" + dataObj.gpio35ValMax + " = " + (3.3 / 500 * dataObj.gpio35Val).toFixed(1) + "v";
 
 
         if (firstLoad || (dataObj.ts - lastTimeStamp) > 200) {

@@ -18,24 +18,65 @@
 #include "sys/types.h"
 //https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/esp_timer.html#
 #include "esp_timer.h"
+#include "hal/adc_types.h"
+#include "esp_adc/adc_oneshot.h"
+#include "esp_random.h"
 
 int timerCount          = 0;
 int ricksCallbackCounter = 0;
+
+adc_channel_t             myChannel;
+adc_oneshot_unit_handle_t myADCHandle;
+int                       ADCResult;
+int                       ADCDeltaTime;
+
+typedef struct  {
+    unsigned int samples;
+    unsigned int total;
+} adcStuff_t;
+
+// const adcStuff_t reset = {
+//     .samples = 0,
+//     .total   = 0
+// };
+
+adcStuff_t adcStuff = {
+    .samples =  0,
+    .total   = 0
+};
+
+
 
 //Rick's basic callback for the FreeRTOS timer
 //https://www.freertos.org/FreeRTOS-timers-xTimerCreate.html
 void vCallbackFunction1(TimerHandle_t xTimer)
 {
     int64_t getTime = esp_timer_get_time();
-    struct timeval tv_now;
-    gettimeofday(&tv_now, NULL);
-    int64_t time_us = (int64_t)tv_now.tv_sec * 1000000L + (int64_t)tv_now.tv_usec;
+    //struct timeval tv_now;
+    //gettimeofday(&tv_now, NULL);
+    //int64_t time_us = (int64_t)tv_now.tv_sec * 1000000L + (int64_t)tv_now.tv_usec;
     timerCount++;
-    printf("timerCount = %d, %lli getTime=%lli, rickCallbackCounter=%d\n", timerCount, time_us, getTime, ricksCallbackCounter);
+    //printf("timerCount = %d, %lli getTime=%lli, rickCallbackCounter=%d ADCResult=%d, ADCDeltaTime=%d\n", 
+    //timerCount, time_us, getTime, ricksCallbackCounter, ADCResult, ADCDeltaTime);
+    printf("current %d ADCDeltaTime %d samples %d, total %d, average %f\n", 
+    ADCResult, ADCDeltaTime, adcStuff.samples, adcStuff.total, (float)adcStuff.total/(float)adcStuff.samples);
+    adcStuff.total = 0;
+    adcStuff.samples = 0;
 }
 
+//esp_timers callback
 void ricksCallback(void *arg) {
+
+    int startTime;
+    startTime = esp_timer_get_time();
+    ESP_ERROR_CHECK(adc_oneshot_read(myADCHandle, myChannel, &ADCResult));
+    //ADCResult = esp_random();
+
+
     ricksCallbackCounter++;
+    adcStuff.samples++;
+    adcStuff.total += ADCResult;
+    ADCDeltaTime = esp_timer_get_time() - startTime;
 }
 
 void app_main(void)
@@ -69,6 +110,36 @@ void app_main(void)
     printf("Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
 
 
+
+    // Setup and perform oneshot ADC
+    // https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc_oneshot.html
+    // first get the ADC UnitID and Channel Number for the required GPIO
+    adc_unit_t                myUnit;
+    ESP_ERROR_CHECK(adc_oneshot_io_to_channel(35, &myUnit, &myChannel));
+
+    // Configure the Unit
+    adc_oneshot_unit_init_cfg_t  oneShotUnitCfg = {
+        .unit_id  = myUnit,
+        .clk_src  = 0,
+        .ulp_mode = ADC_ULP_MODE_DISABLE
+    };
+
+    printf("Configure the Unit - Handle\n");
+    ESP_ERROR_CHECK(adc_oneshot_new_unit(&oneShotUnitCfg, &myADCHandle));
+
+    printf("Configure the ADC Channel\n");
+    const adc_oneshot_chan_cfg_t oneShotChannelCfg = {
+        .bitwidth = ADC_BITWIDTH_DEFAULT,
+        .atten    = ADC_ATTEN_DB_11
+    };
+
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(myADCHandle, myChannel, &oneShotChannelCfg));    
+
+    ESP_ERROR_CHECK(adc_oneshot_read(myADCHandle, myChannel, &ADCResult));
+    printf("ADC result =%d\n", ADCResult);
+
+
+
     //https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/esp_timer.html#
     printf("creating high resolution timer\n");
     //timer handle
@@ -87,6 +158,7 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_timer_start_periodic(timer_handle, (uint64_t)1000));
 
 
+    // Setup freeRTOS Timer
 
     TickType_t timerTick = 100; // 100 = 1 secound
     void *const timerId  = (void *)0;
