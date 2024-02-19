@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: CC0-1.0
  */
 
+//https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc_oneshot.html#
+
 #include <stdio.h>
 #include <inttypes.h>
 #include "sdkconfig.h"
@@ -14,18 +16,26 @@
 #include "esp_flash.h"
 #include "sys/time.h"
 #include "sys/types.h"
+//https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/esp_timer.html#
+#include "esp_timer.h"
 
-int timerCount = 0;
+int timerCount          = 0;
+int ricksCallbackCounter = 0;
 
 //Rick's basic callback for the FreeRTOS timer
 //https://www.freertos.org/FreeRTOS-timers-xTimerCreate.html
 void vCallbackFunction1(TimerHandle_t xTimer)
 {
+    int64_t getTime = esp_timer_get_time();
     struct timeval tv_now;
     gettimeofday(&tv_now, NULL);
     int64_t time_us = (int64_t)tv_now.tv_sec * 1000000L + (int64_t)tv_now.tv_usec;
     timerCount++;
-    printf("timerCount = %d, %lli \n", timerCount, time_us);
+    printf("timerCount = %d, %lli getTime=%lli, rickCallbackCounter=%d\n", timerCount, time_us, getTime, ricksCallbackCounter);
+}
+
+void ricksCallback(void *arg) {
+    ricksCallbackCounter++;
 }
 
 void app_main(void)
@@ -57,6 +67,26 @@ void app_main(void)
            (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
     printf("Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
+
+
+    //https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/esp_timer.html#
+    printf("creating high resolution timer\n");
+    //timer handle
+    esp_timer_handle_t timer_handle;
+    //timer args
+    const esp_timer_create_args_t timerArgs = {
+        .callback = ricksCallback,
+        .dispatch_method = ESP_TIMER_TASK,
+        .arg      = (void *)0,
+        .name     = "ricks timer",
+        .skip_unhandled_events = false
+    };
+    //create the timer
+    ESP_ERROR_CHECK(esp_timer_create(&timerArgs, &timer_handle));
+    //start the timer
+    ESP_ERROR_CHECK(esp_timer_start_periodic(timer_handle, (uint64_t)1000));
+
+
 
     TickType_t timerTick = 100; // 100 = 1 secound
     void *const timerId  = (void *)0;
