@@ -23,6 +23,7 @@
 
 static const char *TAG = "HTTPSERVER";
 
+
 void startHttpServer()
 {
     ESP_LOGI(TAG, "Starting httpserver on Port %d", HTTPSERVER_PORT);
@@ -49,6 +50,8 @@ void startHttpServer()
     extern int32_t shuntOffset1;
     int checkValue = -1;
     int checkCalc = -10000000;
+
+    int printLevel = 0;
 
     esp_vfs_spiffs_conf_t conf = {
         .base_path = "/spiffs",
@@ -219,7 +222,7 @@ void startHttpServer()
 
             if (keepAlive)
             {
-                ESP_LOGI(TAG, "Socket KeepAlive");
+                if (printLevel > 2) printf("http Socket KeepAlive\n");
             }
             else
             {
@@ -233,12 +236,18 @@ void startHttpServer()
                     break;
                 }
 
-                to.tv_sec = 5;
+                // Set the recieve timeout
+                // If you set this to zero, there is no timeout
+                //
+//                to.tv_sec = 5;
+                to.tv_sec = 0;
                 to.tv_usec = 0;
                 if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &to, sizeof(to)) < 0)
                 {
                     ESP_LOGE(TAG, "... failed to set socket receiving timeout");
                 }
+
+
 
                 port = ((struct sockaddr_in *)&source_addr)->sin_port;
                 addr = ((struct sockaddr_in *)&source_addr)->sin_addr.s_addr;
@@ -263,6 +272,8 @@ void startHttpServer()
             char filename[MAXURL + 10];
             FILE *fp = NULL;
             keepAlive = false;
+
+             // Rx While loop
             while (1)
             {
                 int len;
@@ -273,7 +284,8 @@ void startHttpServer()
 
                 if (len < 0)
                 {
-                    ESP_LOGE(TAG, "Error occurred during receiving: errno %d, httpHeader %d", (int)errno, (int)httpHeader);
+                    if (errno == EAGAIN) ESP_LOGI(TAG, "Socket has timed out");
+                    else ESP_LOGE(TAG, "Error occurred during receiving: errno %d, httpHeader %d", (int)errno, (int)httpHeader);
                     break;
                 }
                 else if (len == 0)
@@ -283,7 +295,7 @@ void startHttpServer()
                 }
                 else
                 {
-                    printf("%c", messageIn[0]);
+                    if (printLevel > 2)  printf("%c", messageIn[0]);
                     if (httpHeader)
                     {
                         if (headerLineIndex < (sizeof(headerLine) - 1) && ((messageIn[0] != '\n') || messageIn[0] != '\r'))
@@ -339,7 +351,7 @@ void startHttpServer()
                                 strcat(filename, "/spiffs/");
                                 strncat(filename, url, MAXURL - 1);
 
-                                printf("URL ->\"%s\" filename=%s\n", url, filename);
+                                if (printLevel > 1) printf("URL ->\"%s\" filename=%s\n", url, filename);
                             }
                             // printf("\n\nheaderLine %p start %p end %p \n\n", headerLine, start, end);
 
@@ -351,7 +363,7 @@ void startHttpServer()
                         {
                             headerLine[headerLineIndex] = 0;
                             sscanf(headerLine, "Content-Length: %d", &contentLength);
-                            printf("\n content Lenght : %d\n", contentLength);
+                            if (printLevel > 2) printf("\n content Lenght : %d\n", contentLength);
 
                             contentLengthLine = false;
                         }
@@ -392,8 +404,8 @@ void startHttpServer()
                                     int shunt0TargetIn = -70000;
                                     int shunt1TargetIn = -80000;
                                     sscanf(url, "data/pwm=%d,%d,%d,%d,%d,%d,%d,%d", &pwm1, &pwm2, &adcTarget, &pwm1Min, &pwm1Max, &stateIn, &shunt0TargetIn, &shunt1TargetIn);
-                                    printf("url:%s\n", url);
-                                    printf("pwm1=%d pwm2=%d\n", pwm1, pwm2);
+                                    if (printLevel > 2) printf("url:%s\n", url);
+                                    if (printLevel > 2) printf("pwm1=%d pwm2=%d\n", pwm1, pwm2);
 
                                     if (pwm1 >= 0)
                                     {

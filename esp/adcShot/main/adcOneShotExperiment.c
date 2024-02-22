@@ -67,7 +67,7 @@ void vCallbackFunction1(TimerHandle_t xTimer)
 //esp_timers callback
 void ricksCallback(void *arg) {
 
-    int startTime;
+    int64_t startTime;
     startTime = esp_timer_get_time();
     ESP_ERROR_CHECK(adc_oneshot_read(myADCHandle, myChannel, &ADCResult));
     //ADCResult = esp_random();
@@ -123,13 +123,14 @@ void app_main(void)
         .clk_src  = 0,
         .ulp_mode = ADC_ULP_MODE_DISABLE
     };
-
+    
     printf("Configure the Unit - Handle\n");
     ESP_ERROR_CHECK(adc_oneshot_new_unit(&oneShotUnitCfg, &myADCHandle));
 
     printf("Configure the ADC Channel\n");
     const adc_oneshot_chan_cfg_t oneShotChannelCfg = {
-        .bitwidth = ADC_BITWIDTH_DEFAULT,
+//        .bitwidth = ADC_BITWIDTH_DEFAULT,
+        .bitwidth = ADC_BITWIDTH_12,
         .atten    = ADC_ATTEN_DB_11
     };
 

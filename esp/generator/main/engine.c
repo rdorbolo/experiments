@@ -73,6 +73,8 @@ bool avgStart = true;
 int samples = 0;
 int increasePower = 0;
 
+ // Measure how long the ADC converion takes
+int64_t ADCDeltaTime = 0;
 
 
 void getVolts(void *parameters)
@@ -87,17 +89,24 @@ void getVolts(void *parameters)
         int avg = 0;
         for (int i = 0; i < 10; i++)
         {
+            int64_t ADCStartTime = esp_timer_get_time();
             avg += adc1_get_raw(ADC1_GPIO35_CHANNEL);
+            ADCDeltaTime =  esp_timer_get_time() - ADCStartTime;
         }
         gpio35Val = avg / 10;
         samples++;
         adcSamples++;
 
+       
+        
+
         if (avgStart)
         {
             for (int i = 0; i < buffSize; i++)
             {
+                
                 adcAvgBuf[i] = gpio35Val;
+                
             }
             avgStart = false;
         }
@@ -126,14 +135,17 @@ void getVolts(void *parameters)
         {
             gpio35ValMin = adcAvg;
         }
-        if ((currentTime - lastTime) > 10000 /*100=1sec*/)
+//        if ((currentTime - lastTime) > 10000 /*100=1sec*/)
+        if ((currentTime - lastTime) > 1000 /*100=1sec*/)
         {
 
-            uint64_t timerValue;
-            timer_get_counter_value(0, 1, &timerValue);
+            //uint64_t timerValue;
+            //timer_get_counter_value(0, 1, &timerValue);
 
-            ESP_LOGI(TAG, "samples: %d, delta: %d altCnt : %d timerCnt: %d, pinStatus %d timerCnt %llu adcSamples %d gpio35Val/Min/Max %d/%d/%d, shunt0 %d, shunt1 %d ",
-                     samples, altCnt - altCntLast, altCnt, timerCnt, gpio_get_level(ALT_GPIO_PIN), timerValue,
+            ESP_LOGI(TAG, "ADCDeltaTime=%llu", ADCDeltaTime);
+
+            ESP_LOGI(TAG, "samples: %d, delta: %d altCnt : %d timerCnt: %d, pinStatus %d adcSamples %d gpio35Val/Min/Max %d/%d/%d, shunt0 %d, shunt1 %d ",
+                     samples, altCnt - altCntLast, altCnt, timerCnt, gpio_get_level(ALT_GPIO_PIN),
                      adcSamples, gpio35Val, gpio35ValMin, gpio35ValMax, shunt0_data.currentSample, shunt1_data.currentSample);
             altCntLast = altCnt;
 
@@ -435,7 +447,7 @@ void updateLoop(void *parameters)
 
     while (1)
     {
-        vTaskDelayUntil(&xLastWakeTime, xFrequency);
+        xTaskDelayUntil(&xLastWakeTime, xFrequency);
         time_status = onTime;
         statusCalc = STATUS_ADJUSTING;
 
