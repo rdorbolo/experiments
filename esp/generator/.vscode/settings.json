@@ -9,5 +9,6 @@
         "queue.h": "c"
     },
     "idf.flashType": "UART",
-    "C_Cpp.default.compilerPath": ""
+    "C_Cpp.default.compilerPath": "",
+    "idf.pythonInstallPath": "/usr/bin/python3"
 }
